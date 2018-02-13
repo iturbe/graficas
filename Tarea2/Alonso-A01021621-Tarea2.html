@@ -1,0 +1,44 @@
+<!-- Alonso Iturbe Sotomayor !-->
+<!-- A01021621 !-->
+
+<html>
+
+<head>
+<title>Tarea 2</title>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+<script src="../libs/jquery-1.9.1/jquery-1.9.1.js"></script>
+<script src="../libs/gl-matrix/gl-matrix.js"></script>
+<script src="../libs/requestAnimationFrame/RequestAnimationFrame.js"></script>
+<script src="Alonso-A01021621-Tarea2.js"></script>
+
+<script type="text/javascript">
+          
+	$(document).ready(
+			function() {
+		        var canvas = document.getElementById("webglcanvas");
+			    var gl = initWebGL(canvas);
+		        initViewport(gl, canvas);
+		        initGL(canvas);
+				// first array: translation in [x, y, z]
+				// second array: rotation in [x, y, z]
+                
+				//var cube = createCube(gl, [-1.5, 0, -8], [1, 1, 1]);
+                //var cube_2 = createCube(gl, [1.5, 0, -8], [1, 0, 1]);
+				
+				var rhombus = createRhombus(gl, [-4, 0, -8], [0.5, 0.2, .1]);
+				var pyramid = createPyramid(gl, [0, 0, -8], [0, 1, 0]);
+				var icosahedron = createIcosahedron(gl, [4, 1, -8], [0.5, 0.2, 0.1]);
+		        initShader(gl);
+		        run(gl, [rhombus, pyramid, icosahedron]);
+			}
+	);
+
+</script>
+
+</head>
+<body>
+
+    <canvas id="webglcanvas" style="border: none;" width="1000" height="500"></canvas>
+
+</body>
+</html>
