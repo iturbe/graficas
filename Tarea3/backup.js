@@ -18,25 +18,15 @@ var currentTime = Date.now();
 
 // PLANETS & MOONS
 // Planets
-var sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune, pluto;
-
-//var planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune, pluto];
-
-//var planets;
-
-// Sun planets
-var sunGroup;
+var mercury, venus, earth, mars, jupiter, saturn, uranus, neptune, pluto;
 
 // Earth Moons
-var earthGroup;
 var moon;
 
 // Mars Moons
-var marsGroup;
 var phobos, deimos;
 
 // Jupiter Moons
-var jupiterGroup;
 var io, europa, ganymede, callisto;
 
 // Saturn Moons
@@ -48,7 +38,7 @@ var miranda;
 // Neptune Moons
 var triton;
 
-var planetGroup, testPlanet, moon;
+var planetGroup, bluePlanet, moon;
 var moonOrbit;
 
 // Aquí se encuentran definidas las animaciones (orbitas y rotaciones del planeta azul y su luna)
@@ -71,9 +61,8 @@ function animate(){
     // Rotate the cone about its X axis (tumble forward)
     cone.rotation.z += angle;
 
-    // Rotación del planeta de prueba
-    testPlanet.rotation.y += angle;
-    mercury.rotation.y += angle;
+    // Rotación del planeta azul
+    bluePlanet.rotation.y += angle * 0.1;
 
     // Rotar el objeto de orbita para generar el efecto de órbita en si
     moonOrbit.rotation.y += angle;
@@ -95,8 +84,6 @@ function run() {
 
 // Esta funcion genera el planeta azul de la derecha y sus lunas
 function createPlanet(){
-    
-    
     // Cargar UV Colors texture (una manera de cargar textura)
     var mapUrl = "images/ash_uvgrid01.jpg";
     var textureMap = new THREE.TextureLoader().load(mapUrl);
@@ -111,17 +98,14 @@ function createPlanet(){
     // Cargar test texture
     var testTexture = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("images/test1.png")});
 
-    
-
     // Contenedor de planetas de la derecha
     planetGroup = new THREE.Object3D();
-    planetGroup.position.set(0,0,0);
+    planetGroup.position.set(3,0,0);
     scene.add(planetGroup);
 
-    
     // Esfera con luna
     //Los atributos de SphereGeometry son scale, (algo que ver con ser esfera), (algo que ver con ser esfera)
-    testPlanet = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 20), UVMaterial);
+    bluePlanet = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 20), turquoiseTexture);
     moonOrbit = new THREE.Group();
 
     // Luna de esfera
@@ -133,81 +117,7 @@ function createPlanet(){
     planet_3.position.set(-3, 0, 0);
 
     // Agregar el planeta al grupo
-    planetGroup.add(testPlanet);
-
-    // Asignar orbita de lunas al planeta
-    testPlanet.add(moonOrbit);
-
-    // Asignar lunas a la órbita
-    moonOrbit.add(moon);
-    moonOrbit.add(planet_3);
-    
-}
-
-// Esta funcion genera el planeta que se le pasa como parámetro
-function createSpecificPlanet(planet, planetName, planetScale, planetPosition){
-
-    // Cargar turquoise texture
-    var planetTexture = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("images/"+planetName+"map.jpg")});
-
-    // Generar planeta
-    //Los atributos de SphereGeometry son scale, (algo que ver con ser esfera), (algo que ver con ser esfera)
-    planet = new THREE.Mesh(new THREE.SphereGeometry(planetScale, 20, 20), planetTexture);
-
-    // Especificar posición
-    planet.position.set(planetPosition, 0, 0);
-
-    // Agregar al grupo
-    planetGroup.add(planet);
-
-    // Crear orbita
-    moonOrbit = new THREE.Group();
-
-    // Asignar orbita de lunas al planeta
-    planet.add(moonOrbit);
-    
-    /*
-    // Luna de esfera
-    moon = new THREE.Mesh(new THREE.SphereGeometry(0.4, 20, 20), companionCubeTexture);
-    moon.position.set(1.5, 0, 0);
-
-    // no está en el scene
-    planet_3 = new THREE.Mesh(new THREE.SphereGeometry(0.4, 20, 20), testTexture);
-    planet_3.position.set(-3, 0, 0);
-
-    // Asignar lunas a la órbita
-    moonOrbit.add(moon);
-    moonOrbit.add(planet_3);
-    */
-
-    return planet;
-}
-
-/*
-// Esta funcion genera el Sol central
-function createSun(){
-
-    // Cargar textura del planeta
-    var planetTexture = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("images/sunmap.jpg")});
-
-    // Contenedor
-    //sunGroup = new THREE.Object3D();
-    //sunGroup.position.set(1,0,0);
-    //scene.add(sunGroup);
-
-    // Generar planeta
-    // Los atributos de SphereGeometry son scale, (algo que ver con ser esfera), (algo que ver con ser esfera)
-    sun = new THREE.Mesh(new THREE.SphereGeometry(2, 20, 20), planetTexture);
-
-    // Agregar el planeta al grupo
-    planetGroup.add(sun);
-    
-    
-    moonOrbit = new THREE.Group();
-
-    // Luna de esfera
-    moon = new THREE.Mesh(new THREE.SphereGeometry(0.4, 20, 20), companionCubeTexture);
-    moon.position.set(1.5, 0, 0);
+    planetGroup.add(bluePlanet);
 
     // Asignar orbita de lunas al planeta
     bluePlanet.add(moonOrbit);
@@ -215,9 +125,7 @@ function createSun(){
     // Asignar lunas a la órbita
     moonOrbit.add(moon);
     moonOrbit.add(planet_3);
-    
 }
-*/
 
 // Esta función genera el grupo de figuras de la izquierda
 function createScene(canvas){    
@@ -230,33 +138,10 @@ function createScene(canvas){
     // Create a new Three.js scene
     scene = new THREE.Scene();
 
-    //createSun();
-    
     createPlanet();
-
-    //createSun();
-
-    sun = createSpecificPlanet(sun, "sun", 1, -5);
-    mercury = createSpecificPlanet(mercury, "mercury", 0.38, 0.4);
-    createSpecificPlanet(venus, "venus", 0.99, 0.7);
-    createSpecificPlanet(earth, "earth", 1, 1);
-    createSpecificPlanet(mars, "mars", 0.53, 1.5);
-    createSpecificPlanet(jupiter, "jupiter", 2, 5.2);
-    createSpecificPlanet(saturn, "saturn", 2, 9.5);
-    createSpecificPlanet(uranus, "uranus", 2, 19.2);
-    createSpecificPlanet(neptune, "neptune", 2, 30.2);
-    createSpecificPlanet(pluto, "pluto", 0.19, 39.5);
-
-    console.log(typeof testPlanet);
-    console.log(typeof mercury);
-
-    //planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune, pluto];
 
     // Set the background color 
     scene.background = new THREE.Color( 0.2, 0.2, 0.2 );
-    //var bgURL = "images/space.jpg";
-    //var spaceTexture = new THREE.TextureLoader().load(bgURL);
-    //scene.background = spaceTexture;
     scene.background = new THREE.Color( "rgb(100, 100, 100)" );
 
     // Add  a camera so we can view the scene
@@ -276,7 +161,6 @@ function createScene(canvas){
     light.target.position.set(0,-2,0);
     sceneGroup.add(light);
 
-    
     // Create a textre phong material for the cube
     // First, create the texture map
     var mapUrl = "images/turquoise-texture.jpg";
@@ -295,13 +179,12 @@ function createScene(canvas){
     cube.rotation.y = Math.PI / 5;
 
     // Add the cube mesh to our group
-    //sceneGroup.add( cube );
-    //sceneGroup.position.set(-2.5, 0 ,0);
-
+    sceneGroup.add( cube );
+    sceneGroup.position.set(-2.5, 0 ,0);
 
     // Create a group for the sphere
     sphereGroup = new THREE.Object3D;
-    //sceneGroup.add(sphereGroup);
+    sceneGroup.add(sphereGroup);
     
     // Move the sphere group up and back from the cube
     sphereGroup.position.set(0, 3, -4);
