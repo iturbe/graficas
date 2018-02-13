@@ -1,3 +1,8 @@
+// Alonso Iturbe
+// A01021621
+
+
+// Variables globales
 var renderer = null, 
 scene = null, 
 camera = null,
@@ -11,8 +16,30 @@ cone = null;
 var duration = 5000; // ms
 var currentTime = Date.now();
 
+// PLANETS & MOONS
+// Planets
+var mercury, venus, earth, mars, jupiter, saturn, uranus, neptune, pluto;
+
+// Earth Moons
+var moon;
+
+// Mars Moons
+var phobos, deimos;
+
+// Jupiter Moons
+var io, europa, ganymede, callisto;
+
+// Saturn Moons
+var titan, enceladus, iapetus, mimas, hyperion;
+
+// Uranus Moons
+var miranda;
+
+// Neptune Moons
+var triton;
+
 var planetGroup, bluePlanet, moon;
-var bluePlanetOrbit;
+var moonOrbit;
 
 // Aquí se encuentran definidas las orbitas de las lunas del planeta azul
 function animate(){
@@ -28,14 +55,19 @@ function animate(){
 
     // Rotate the sphere group about its Y axis
     sphereGroup.rotation.y -= angle / 2;
+
     sphere.rotation.x += angle;
 
     // Rotate the cone about its X axis (tumble forward)
     cone.rotation.z += angle;
 
-    // Lunas del planeta azul
+    // Rotación del planeta azul
     bluePlanet.rotation.y += angle * 0.1;
-    bluePlanetOrbit.rotation.y += angle;
+
+    // Rotar el objeto de orbita para generar el efecto de órbita en si
+    moonOrbit.rotation.y += angle;
+
+    // Rotar la luna
     moon.rotation.y += angle;
 }
 
@@ -74,7 +106,7 @@ function createPlanet(){
     // Esfera con luna
     //Los atributos de SphereGeometry son scale, (algo que ver con ser esfera), (algo que ver con ser esfera)
     bluePlanet = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 20), turquoiseTexture);
-    bluePlanetOrbit = new THREE.Group();
+    moonOrbit = new THREE.Group();
 
     // Luna de esfera
     moon = new THREE.Mesh(new THREE.SphereGeometry(0.4, 20, 20), companionCubeTexture);
@@ -88,11 +120,11 @@ function createPlanet(){
     planetGroup.add(bluePlanet);
 
     // Asignar orbita de lunas al planeta
-    bluePlanet.add(bluePlanetOrbit);
+    bluePlanet.add(moonOrbit);
 
     // Asignar lunas a la órbita
-    bluePlanetOrbit.add(moon);
-    bluePlanetOrbit.add(planet_3);
+    moonOrbit.add(moon);
+    moonOrbit.add(planet_3);
 }
 
 // Esta función genera el grupo de figuras de la izquierda
