@@ -1,6 +1,21 @@
 // Alonso Iturbe
 // A01021621
 
+// Tarea 3 - Sistema Solar
+
+/*
+    ● DONE: Crear un sistema solar con los 8 planetas (y plutón), con sus respectivas lunas, el sol, y el campo de asteroides.
+    ● TODO: Para los asteroides, y algunas lunas, investigar cómo funciona el obj loader, y cargar geometría de un obj.
+    ● TODO: Los planetas, y sus respectivas órbitas, tienen que tener una escala similar a la real.
+    ● TODO: Dibujar la órbita que siguen los planetas.
+    ● TODO: Los planetas tienen que tener su propia rotación, además de que tienen que rotar alrededor del sol. Mismo caso para las respectivas lunas.
+    ● TODO: Cada elemento tiene que tener materiales con texturas difusas, mapas de profundidad o de normales, y en caso de que encuentren, de specularidad.
+        ○ Pueden encontrar varias texturas en: http://planetpixelemporium.com/mars.html
+    ● TODO: El sol es el emisor de la luz: Investigar el uso de point lights en ThreeJs.
+    ● DONE: Controlar la rotación y escala de la escena.
+*/
+
+var textcolor = "green";
 
 // Variables globales
 var renderer = null, 
@@ -20,22 +35,16 @@ var currentTime = Date.now();
 // Planets
 var sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune, pluto;
 
+// TODO: texturas de lunas y valores adecuados
+
 sun = {
     name:"sun",
     scale:1,
     distance: -9,
     orbitSpeed:1,
     rotationSpeed:1,
-    hasMoons:true,
-    numberOfMoons:9,
-    moons : [
-        {
-            name:"test"
-        },
-        {
-            name:"test2"
-        }
-    ]
+    hasMoons:false,
+    numberOfMoons:0,
 }
 
 mercury = {
@@ -58,14 +67,51 @@ venus = {
     numberOfMoons:0
 }
 
+// Earth Moons
+var earthGroup;
+
+var moon = {
+    name:"moon",
+    scale:0.3,
+    position: 1,
+    distance: 1,
+    orbitSpeed:1,
+    rotationSpeed:5,
+    isMoon:true,
+}
+
 earth = {
     name:"earth",
     scale:1,
     distance: 0,
     orbitSpeed:1,
     rotationSpeed:1,
-    hasMoons:false,
-    numberOfMoons:0
+    hasMoons:true,
+    numberOfMoons:1,
+    moons : [moon]
+}
+
+// MARS & MOONS
+var phobos, deimos;
+
+phobos = {
+    name:"phobos",
+    scale:0.3,
+    position: 1,
+    distance: 1,
+    orbitSpeed:1,
+    rotationSpeed:5,
+    isMoon:true,
+}
+
+deimos = {
+    name:"deimos",
+    scale:0.3,
+    position: 1,
+    distance: 1,
+    orbitSpeed:1,
+    rotationSpeed:5,
+    isMoon:true,
 }
 
 mars = {
@@ -75,9 +121,11 @@ mars = {
     orbitSpeed:1,
     rotationSpeed:1,
     hasMoons:false,
-    numberOfMoons:0
+    numberOfMoons:2,
+    moons : {phobos, deimos}
 }
 
+// JUPITER & MOONS
 jupiter = {
     name:"jupiter",
     scale:1,
@@ -131,13 +179,8 @@ pluto = {
 // Sun planets
 var sunGroup;
 
-// Earth Moons
-var earthGroup;
-var moon;
-
 // Mars Moons
 var marsGroup;
-var phobos, deimos;
 
 // Jupiter Moons
 var jupiterGroup;
@@ -152,8 +195,7 @@ var miranda;
 // Neptune Moons
 var triton;
 
-var planetGroup, testPlanet, moon;
-var moonOrbit;
+var planetGroup, testPlanet;
 
 // Aquí se encuentran definidas las animaciones (orbitas y rotaciones del planeta azul y su luna)
 function animate(){
@@ -181,9 +223,19 @@ function animate(){
 
     // Rotar los planetas de acuerdo con su velocidad
     for (let index = 0; index < planets.length; index++) {
-        //console.log(planets[index].name);
         planets[index].rotation.y += angle * planets[index].rotationSpeed;
-        
+
+        // Rotar orbitas de lunas de cada planeta
+        if (planets[index].hasMoons) {
+
+            // Rotar órbita
+            planets[index].moonOrbit.rotation.y += angle;
+
+            // Rotar luna en sí
+            for (let moonIndex = 0; moonIndex < planets[index].moons.length; moonIndex++) {
+                planets[index].moons[moonIndex].rotation.y += angle * planets[index].moons[moonIndex].rotationSpeed;
+            }
+        }
     }
 
     // Rotar el objeto de orbita para generar el efecto de órbita en si
@@ -248,7 +300,7 @@ function createPlanet(){
 // Esta funcion genera el planeta que se le pasa como parámetro
 function createSpecificObjectPlanet(planet){
 
-    // Cargar turquoise texture
+    // Cargar textura
     var planetTexture = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("images/"+planet.name+"map.jpg")});
 
     // Generar planeta
@@ -257,55 +309,68 @@ function createSpecificObjectPlanet(planet){
 
     console.log("Creating " + planet.name);
 
-    if (planet.hasMoons) {
-         console.log(planet.moons[0].name);
-         console.log(planet.moons[1].name);
-    }
-
     // Especificar posición
     newPlanet.position.set(planet.distance, 0, 0);
 
     // Agregar al grupo
     planetGroup.add(newPlanet);
 
-    // Crear orbita
-    moonOrbit = new THREE.Group();
+    // Creación de lunas en caso de ser necesario
+    if (planet.hasMoons) {
+        
+        // Crear orbita de lunas
+        var moonOrbit = new THREE.Group();
 
-    // Asignar orbita de lunas al planeta
-    newPlanet.add(moonOrbit);
+        // Asignar orbita de lunas al planeta
+        newPlanet.add(moonOrbit);
+
+        console.log("1: " + Object.keys(newPlanet));
+
+        // Iterar para crear todas las lunas necesarias
+        for (let index = 0; index < planet.moons.length; index++) {
+
+            // Cargar textura
+            var moonTexture = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("images/"+planet.moons[index].name+"map.jpg")});
+            
+            var newMoon = new THREE.Mesh(new THREE.SphereGeometry(planet.moons[index].scale, 20, 20), moonTexture);
+            newMoon.position.set(planet.moons[index].position, planet.moons[index].position, 0);
+
+            // Asignar lunas a la órbita
+            moonOrbit.add(newMoon);
+
+            newPlanet.moonOrbit = moonOrbit;
+
+            // Combinar objetos de luna
+            planet.moons[index] = combine(planet.moons[index], newMoon);
+
+            console.log("2: " + Object.keys(newPlanet));
+
+        }
+    }
     
-    /*
-    // Luna de esfera
-    moon = new THREE.Mesh(new THREE.SphereGeometry(0.4, 20, 20), companionCubeTexture);
-    moon.position.set(1.5, 0, 0);
+    // Retornar el combinado
+    return combine(planet, newPlanet);
+}
 
-    // no está en el scene
-    planet_3 = new THREE.Mesh(new THREE.SphereGeometry(0.4, 20, 20), testTexture);
-    planet_3.position.set(-3, 0, 0);
-
-    // Asignar lunas a la órbita
-    moonOrbit.add(moon);
-    moonOrbit.add(planet_3);
-    */
-
-   // Combinar atributos de los dos objetos
+// Combinar atributos de dos objetos
+function combine(obj1, obj2){
    
    // Create new object in order to combine object properties
    var extended = {};
    
    // Iterar el primer objeto
-   for (var prop in planet) {
-       if (planet.hasOwnProperty(prop)) {
+   for (var prop in obj1) {
+       if (obj1.hasOwnProperty(prop)) {
            // Push each value from `obj` into `extended`
-           extended[prop] = planet[prop];
+           extended[prop] = obj1[prop];
         }
     }
     
     // Iterar el segundo objeto
-    for (var prop in newPlanet) {
-        if (newPlanet.hasOwnProperty(prop)) {
+    for (var prop in obj2) {
+        if (obj2.hasOwnProperty(prop)) {
             // Push each value from `obj` into `extended`
-            extended[prop] = newPlanet[prop];
+            extended[prop] = obj2[prop];
         }
     }
     
@@ -341,7 +406,7 @@ function createScene(canvas){
     neptune = createSpecificObjectPlanet(neptune);
     pluto = createSpecificObjectPlanet(pluto);
 
-    // Meter a array para poder hacer la rotación de un jalón
+    // Meter a array para poder iterar todas las rotaciones
     planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune, pluto];
 
     // Setup del background
@@ -425,14 +490,14 @@ function createScene(canvas){
     scene.add( sceneGroup );
 }
 
-// Rotar la escena
+// Rotar la escena con el mouse
 function rotateScene(deltax, deltay){
     sceneGroup.rotation.y += deltax / 100;
     sceneGroup.rotation.x += deltay / 100;
     $("#rotation").html("rotation:" + sceneGroup.rotation.x.toFixed(2) + "," + sceneGroup.rotation.y.toFixed(2) + ",0");
 }
 
-// Esta función quiero pensar que es el callback de cuando se escala la escena
+// Función que escala la escena con el slider
 function scaleScene(scale){
     sceneGroup.scale.set(scale, scale, scale);
     $("#scale").html("scale: " + scale);
