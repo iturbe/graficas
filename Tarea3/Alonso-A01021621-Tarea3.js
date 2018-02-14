@@ -72,14 +72,19 @@ function animate(){
     cone.rotation.z += angle;
 
     // Rotación del planeta de prueba
-    testPlanet.rotation.y += angle;
-    mercury.rotation.y += angle;
+    //testPlanet.rotation.y += angle;
+
+    // Rotar los planetas
+    for (let index = 0; index < planets.length; index++) {
+        planets[index].rotation.y += angle;
+        
+    }
 
     // Rotar el objeto de orbita para generar el efecto de órbita en si
-    moonOrbit.rotation.y += angle;
+    //moonOrbit.rotation.y += angle;
 
     // Rotar la luna
-    moon.rotation.y += angle;
+    //moon.rotation.y += angle;
 }
 
 function run() {
@@ -96,7 +101,6 @@ function run() {
 // Esta funcion genera el planeta azul de la derecha y sus lunas
 function createPlanet(){
     
-    
     // Cargar UV Colors texture (una manera de cargar textura)
     var mapUrl = "images/ash_uvgrid01.jpg";
     var textureMap = new THREE.TextureLoader().load(mapUrl);
@@ -110,20 +114,11 @@ function createPlanet(){
 
     // Cargar test texture
     var testTexture = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("images/test1.png")});
-
-    
-
-    // Contenedor de planetas de la derecha
-    planetGroup = new THREE.Object3D();
-    planetGroup.position.set(0,0,0);
-    scene.add(planetGroup);
-
     
     // Esfera con luna
     //Los atributos de SphereGeometry son scale, (algo que ver con ser esfera), (algo que ver con ser esfera)
     testPlanet = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 20), UVMaterial);
     moonOrbit = new THREE.Group();
-
     // Luna de esfera
     moon = new THREE.Mesh(new THREE.SphereGeometry(0.4, 20, 20), companionCubeTexture);
     moon.position.set(1.5, 0, 0);
@@ -152,19 +147,20 @@ function createSpecificPlanet(planet, planetName, planetScale, planetPosition){
 
     // Generar planeta
     //Los atributos de SphereGeometry son scale, (algo que ver con ser esfera), (algo que ver con ser esfera)
-    planet = new THREE.Mesh(new THREE.SphereGeometry(planetScale, 20, 20), planetTexture);
+    
+    var newPlanet = new THREE.Mesh(new THREE.SphereGeometry(planetScale, 20, 20), planetTexture);
 
     // Especificar posición
-    planet.position.set(planetPosition, 0, 0);
+    newPlanet.position.set(planetPosition, 0, 0);
 
     // Agregar al grupo
-    planetGroup.add(planet);
+    planetGroup.add(newPlanet);
 
     // Crear orbita
     moonOrbit = new THREE.Group();
 
     // Asignar orbita de lunas al planeta
-    planet.add(moonOrbit);
+    newPlanet.add(moonOrbit);
     
     /*
     // Luna de esfera
@@ -180,8 +176,10 @@ function createSpecificPlanet(planet, planetName, planetScale, planetPosition){
     moonOrbit.add(planet_3);
     */
 
-    return planet;
+    planet = newPlanet;
+    return newPlanet;
 }
+
 
 /*
 // Esta funcion genera el Sol central
@@ -230,34 +228,31 @@ function createScene(canvas){
     // Create a new Three.js scene
     scene = new THREE.Scene();
 
-    //createSun();
-    
-    createPlanet();
-
-    //createSun();
+    // Contenedor de planetas de la derecha
+    planetGroup = new THREE.Object3D();
+    planetGroup.position.set(0,0,0);
+    scene.add(planetGroup);
 
     sun = createSpecificPlanet(sun, "sun", 1, -5);
-    mercury = createSpecificPlanet(mercury, "mercury", 0.38, 0.4);
-    createSpecificPlanet(venus, "venus", 0.99, 0.7);
-    createSpecificPlanet(earth, "earth", 1, 1);
-    createSpecificPlanet(mars, "mars", 0.53, 1.5);
-    createSpecificPlanet(jupiter, "jupiter", 2, 5.2);
-    createSpecificPlanet(saturn, "saturn", 2, 9.5);
-    createSpecificPlanet(uranus, "uranus", 2, 19.2);
-    createSpecificPlanet(neptune, "neptune", 2, 30.2);
-    createSpecificPlanet(pluto, "pluto", 0.19, 39.5);
+    mercury = createSpecificPlanet(mercury, "mercury", 2, 4);
+    venus = createSpecificPlanet(venus, "venus", 0.99, 0.7);
+    earth = createSpecificPlanet(earth, "earth", 1, 1);
+    mars = createSpecificPlanet(mars, "mars", 0.53, 1.5);
+    jupiter = createSpecificPlanet(jupiter, "jupiter", 2, 5.2);
+    saturn = createSpecificPlanet(saturn, "saturn", 2, 9.5);
+    uranus = createSpecificPlanet(uranus, "uranus", 2, 19.2);
+    neptune = createSpecificPlanet(neptune, "neptune", 2, 30.2);
+    pluto = createSpecificPlanet(pluto, "pluto", 0.19, 39.5);
 
-    console.log(typeof testPlanet);
-    console.log(typeof mercury);
+    // Meter a array para poderlos girar de un jalón
+    planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune, pluto];
 
-    //planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune, pluto];
-
-    // Set the background color 
+    // Setup del background
     scene.background = new THREE.Color( 0.2, 0.2, 0.2 );
-    //var bgURL = "images/space.jpg";
-    //var spaceTexture = new THREE.TextureLoader().load(bgURL);
-    //scene.background = spaceTexture;
-    scene.background = new THREE.Color( "rgb(100, 100, 100)" );
+    var bgURL = "images/space.jpg";
+    var spaceTexture = new THREE.TextureLoader().load(bgURL);
+    scene.background = spaceTexture;
+    //scene.background = new THREE.Color( "rgb(100, 100, 100)" );
 
     // Add  a camera so we can view the scene
     camera = new THREE.PerspectiveCamera( 45, canvas.width / canvas.height, 1, 4000 );
