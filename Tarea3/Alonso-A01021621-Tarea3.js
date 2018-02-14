@@ -20,6 +20,16 @@ var currentTime = Date.now();
 // Planets
 var sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune, pluto;
 
+mercury = {
+    name:"mercury",
+    scale:2,
+    distance: -6,
+    orbitSpeed:1,
+    rotationSpeed:1,
+    hasMoons:false,
+    numberOfMoons:0
+}
+
 //var planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune, pluto];
 
 //var planets;
@@ -181,6 +191,47 @@ function createSpecificPlanet(planet, planetName, planetScale, planetPosition){
     return newPlanet;
 }
 
+// Esta funcion genera el planeta que se le pasa como parámetro
+function createSpecificObjectPlanet(planet){
+
+    // Cargar turquoise texture
+    var planetTexture = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("images/"+planet.name+"map.jpg")});
+
+    // Generar planeta
+    //Los atributos de SphereGeometry son scale, (algo que ver con ser esfera), (algo que ver con ser esfera)
+    
+    var newPlanet = new THREE.Mesh(new THREE.SphereGeometry(planet.scale, 20, 20), planetTexture);
+
+    // Especificar posición
+    newPlanet.position.set(planet.distance, 0, 0);
+
+    // Agregar al grupo
+    planetGroup.add(newPlanet);
+
+    // Crear orbita
+    moonOrbit = new THREE.Group();
+
+    // Asignar orbita de lunas al planeta
+    newPlanet.add(moonOrbit);
+    
+    /*
+    // Luna de esfera
+    moon = new THREE.Mesh(new THREE.SphereGeometry(0.4, 20, 20), companionCubeTexture);
+    moon.position.set(1.5, 0, 0);
+
+    // no está en el scene
+    planet_3 = new THREE.Mesh(new THREE.SphereGeometry(0.4, 20, 20), testTexture);
+    planet_3.position.set(-3, 0, 0);
+
+    // Asignar lunas a la órbita
+    moonOrbit.add(moon);
+    moonOrbit.add(planet_3);
+    */
+
+    planet = newPlanet;
+    return newPlanet;
+}
+
 
 /*
 // Esta funcion genera el Sol central
@@ -235,18 +286,19 @@ function createScene(canvas){
     scene.add(planetGroup);
 
     // Generar planetas
-    sun = createSpecificPlanet(sun, "sun", 1, -5);
-    mercury = createSpecificPlanet(mercury, "mercury", 2, 4);
-    venus = createSpecificPlanet(venus, "venus", 0.99, 0.7);
-    earth = createSpecificPlanet(earth, "earth", 1, 1);
-    mars = createSpecificPlanet(mars, "mars", 0.53, 1.5);
-    jupiter = createSpecificPlanet(jupiter, "jupiter", 2, 5.2);
-    saturn = createSpecificPlanet(saturn, "saturn", 2, 9.5);
-    uranus = createSpecificPlanet(uranus, "uranus", 2, 19.2);
-    neptune = createSpecificPlanet(neptune, "neptune", 2, 30.2);
-    pluto = createSpecificPlanet(pluto, "pluto", 0.19, 39.5);
+    sun = createSpecificPlanet(sun, "sun", 1, -9);
+    //mercury = createSpecificPlanet(mercury, "mercury", 1, -6);
+    mercury = createSpecificObjectPlanet(mercury);
+    venus = createSpecificPlanet(venus, "venus", 1, -3);
+    earth = createSpecificPlanet(earth, "earth", 1, 0);
+    mars = createSpecificPlanet(mars, "mars", 1, 3);
+    jupiter = createSpecificPlanet(jupiter, "jupiter", 1, 6);
+    saturn = createSpecificPlanet(saturn, "saturn", 1, 9);
+    uranus = createSpecificPlanet(uranus, "uranus", 1, 12);
+    neptune = createSpecificPlanet(neptune, "neptune", 1, 15);
+    pluto = createSpecificPlanet(pluto, "pluto", 1, 18);
 
-    // Meter a array para poderlos girar de un jalón
+    // Meter a array para poder hacer la rotación de un jalón
     planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune, pluto];
 
     // Setup del background
@@ -256,7 +308,7 @@ function createScene(canvas){
     scene.background = spaceTexture;
     //scene.background = new THREE.Color( "rgb(100, 100, 100)" );
 
-    // Add  a camera so we can view the scene
+    // Add a camera so we can view the scene
     camera = new THREE.PerspectiveCamera( 45, canvas.width / canvas.height, 1, 4000 );
     camera.position.z = 10;
     scene.add(camera);
@@ -272,7 +324,6 @@ function createScene(canvas){
     light.position.set(-.5, .2, 1);
     light.target.position.set(0,-2,0);
     sceneGroup.add(light);
-
 
     // // Create a textre phong material for the cube
     // // First, create the texture map
@@ -324,7 +375,7 @@ function createScene(canvas){
     // sphereGroup.add( cone );
     
     // Agregar el grupo de planetas de la derecha al sceneGroup para que también se vea afectado por los mouse/scale shifts
-    planetGroup.position.set(-10, 0, 0);
+    planetGroup.position.set(-5, 0, 0);
     sceneGroup.add(planetGroup);
 
     // Now add the group to our scene
