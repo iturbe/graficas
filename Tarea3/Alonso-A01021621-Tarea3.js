@@ -26,8 +26,16 @@ sun = {
     distance: -9,
     orbitSpeed:1,
     rotationSpeed:1,
-    hasMoons:false,
-    numberOfMoons:0
+    hasMoons:true,
+    numberOfMoons:9,
+    moons : [
+        {
+            name:"test"
+        },
+        {
+            name:"test2"
+        }
+    ]
 }
 
 mercury = {
@@ -171,7 +179,7 @@ function animate(){
     // Rotación del planeta de prueba
     //testPlanet.rotation.y += angle;
 
-    // Rotar los planetas
+    // Rotar los planetas de acuerdo con su velocidad
     for (let index = 0; index < planets.length; index++) {
         //console.log(planets[index].name);
         planets[index].rotation.y += angle * planets[index].rotationSpeed;
@@ -237,49 +245,6 @@ function createPlanet(){
     
 }
 
-/*
-// Esta funcion genera el planeta que se le pasa como parámetro
-function createSpecificPlanet(planet, planetName, planetScale, planetPosition){
-
-    // Cargar turquoise texture
-    var planetTexture = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("images/"+planetName+"map.jpg")});
-
-    // Generar planeta
-    //Los atributos de SphereGeometry son scale, (algo que ver con ser esfera), (algo que ver con ser esfera)
-    
-    var newPlanet = new THREE.Mesh(new THREE.SphereGeometry(planetScale, 20, 20), planetTexture);
-
-    // Especificar posición
-    newPlanet.position.set(planetPosition, 0, 0);
-
-    // Agregar al grupo
-    planetGroup.add(newPlanet);
-
-    // Crear orbita
-    moonOrbit = new THREE.Group();
-
-    // Asignar orbita de lunas al planeta
-    newPlanet.add(moonOrbit);
-    
-    
-    // // Luna de esfera
-    // moon = new THREE.Mesh(new THREE.SphereGeometry(0.4, 20, 20), companionCubeTexture);
-    // moon.position.set(1.5, 0, 0);
-
-    // // no está en el scene
-    // planet_3 = new THREE.Mesh(new THREE.SphereGeometry(0.4, 20, 20), testTexture);
-    // planet_3.position.set(-3, 0, 0);
-
-    // // Asignar lunas a la órbita
-    // moonOrbit.add(moon);
-    // moonOrbit.add(planet_3);
-    
-
-    planet = newPlanet;
-    return newPlanet;
-}
-*/
-
 // Esta funcion genera el planeta que se le pasa como parámetro
 function createSpecificObjectPlanet(planet){
 
@@ -288,10 +253,14 @@ function createSpecificObjectPlanet(planet){
 
     // Generar planeta
     //Los atributos de SphereGeometry son scale, (algo que ver con ser esfera), (algo que ver con ser esfera)
-    
     var newPlanet = new THREE.Mesh(new THREE.SphereGeometry(planet.scale, 20, 20), planetTexture);
 
-    console.log(planet.name);
+    console.log("Creating " + planet.name);
+
+    if (planet.hasMoons) {
+         console.log(planet.moons[0].name);
+         console.log(planet.moons[1].name);
+    }
 
     // Especificar posición
     newPlanet.position.set(planet.distance, 0, 0);
@@ -320,49 +289,29 @@ function createSpecificObjectPlanet(planet){
     */
 
    // Combinar atributos de los dos objetos
-   for (var attrname in planet){
-       newPlanet[attrname] = planet[attrname];
-    }
    
-    return newPlanet;
+   // Create new object in order to combine object properties
+   var extended = {};
+   
+   // Iterar el primer objeto
+   for (var prop in planet) {
+       if (planet.hasOwnProperty(prop)) {
+           // Push each value from `obj` into `extended`
+           extended[prop] = planet[prop];
+        }
+    }
+    
+    // Iterar el segundo objeto
+    for (var prop in newPlanet) {
+        if (newPlanet.hasOwnProperty(prop)) {
+            // Push each value from `obj` into `extended`
+            extended[prop] = newPlanet[prop];
+        }
+    }
+    
+    // Retornar el combinado
+    return extended;
 }
-
-
-/*
-// Esta funcion genera el Sol central
-function createSun(){
-
-    // Cargar textura del planeta
-    var planetTexture = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("images/sunmap.jpg")});
-
-    // Contenedor
-    //sunGroup = new THREE.Object3D();
-    //sunGroup.position.set(1,0,0);
-    //scene.add(sunGroup);
-
-    // Generar planeta
-    // Los atributos de SphereGeometry son scale, (algo que ver con ser esfera), (algo que ver con ser esfera)
-    sun = new THREE.Mesh(new THREE.SphereGeometry(2, 20, 20), planetTexture);
-
-    // Agregar el planeta al grupo
-    planetGroup.add(sun);
-    
-    
-    moonOrbit = new THREE.Group();
-
-    // Luna de esfera
-    moon = new THREE.Mesh(new THREE.SphereGeometry(0.4, 20, 20), companionCubeTexture);
-    moon.position.set(1.5, 0, 0);
-
-    // Asignar orbita de lunas al planeta
-    bluePlanet.add(moonOrbit);
-
-    // Asignar lunas a la órbita
-    moonOrbit.add(moon);
-    moonOrbit.add(planet_3);
-    
-}
-*/
 
 // Esta función genera el grupo de figuras de la izquierda
 function createScene(canvas){    
