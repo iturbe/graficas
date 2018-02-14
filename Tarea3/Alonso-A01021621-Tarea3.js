@@ -20,19 +20,105 @@ var currentTime = Date.now();
 // Planets
 var sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune, pluto;
 
-mercury = {
-    name:"mercury",
-    scale:2,
-    distance: -6,
+sun = {
+    name:"sun",
+    scale:1,
+    distance: -9,
     orbitSpeed:1,
     rotationSpeed:1,
     hasMoons:false,
     numberOfMoons:0
 }
 
-//var planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune, pluto];
+mercury = {
+    name:"mercury",
+    scale:1,
+    distance: -6,
+    orbitSpeed:1,
+    rotationSpeed:5,
+    hasMoons:false,
+    numberOfMoons:0
+}
 
-//var planets;
+venus = {
+    name:"venus",
+    scale:1,
+    distance: -3,
+    orbitSpeed:1,
+    rotationSpeed:1,
+    hasMoons:false,
+    numberOfMoons:0
+}
+
+earth = {
+    name:"earth",
+    scale:1,
+    distance: 0,
+    orbitSpeed:1,
+    rotationSpeed:1,
+    hasMoons:false,
+    numberOfMoons:0
+}
+
+mars = {
+    name:"mars",
+    scale:1,
+    distance: 3,
+    orbitSpeed:1,
+    rotationSpeed:1,
+    hasMoons:false,
+    numberOfMoons:0
+}
+
+jupiter = {
+    name:"jupiter",
+    scale:1,
+    distance: 6,
+    orbitSpeed:1,
+    rotationSpeed:1,
+    hasMoons:false,
+    numberOfMoons:0
+}
+
+saturn = {
+    name:"saturn",
+    scale:1,
+    distance: 9,
+    orbitSpeed:1,
+    rotationSpeed:1,
+    hasMoons:false,
+    numberOfMoons:0
+}
+
+uranus = {
+    name:"uranus",
+    scale:1,
+    distance: 12,
+    orbitSpeed:1,
+    rotationSpeed:1,
+    hasMoons:false,
+    numberOfMoons:0
+}
+
+neptune = {
+    name:"neptune",
+    scale:1,
+    distance: 15,
+    orbitSpeed:1,
+    rotationSpeed:1,
+    hasMoons:false,
+    numberOfMoons:0
+}
+
+pluto = {
+    name:"pluto",
+    scale:1,
+    distance: 18,
+    orbitSpeed:1,
+    rotationSpeed:1,
+    hasMoons:false,
+    numberOfMoons:0
+}
 
 // Sun planets
 var sunGroup;
@@ -87,7 +173,8 @@ function animate(){
 
     // Rotar los planetas
     for (let index = 0; index < planets.length; index++) {
-        planets[index].rotation.y += angle;
+        //console.log(planets[index].name);
+        planets[index].rotation.y += angle * planets[index].rotationSpeed;
         
     }
 
@@ -150,6 +237,7 @@ function createPlanet(){
     
 }
 
+/*
 // Esta funcion genera el planeta que se le pasa como parámetro
 function createSpecificPlanet(planet, planetName, planetScale, planetPosition){
 
@@ -173,23 +261,24 @@ function createSpecificPlanet(planet, planetName, planetScale, planetPosition){
     // Asignar orbita de lunas al planeta
     newPlanet.add(moonOrbit);
     
-    /*
-    // Luna de esfera
-    moon = new THREE.Mesh(new THREE.SphereGeometry(0.4, 20, 20), companionCubeTexture);
-    moon.position.set(1.5, 0, 0);
+    
+    // // Luna de esfera
+    // moon = new THREE.Mesh(new THREE.SphereGeometry(0.4, 20, 20), companionCubeTexture);
+    // moon.position.set(1.5, 0, 0);
 
-    // no está en el scene
-    planet_3 = new THREE.Mesh(new THREE.SphereGeometry(0.4, 20, 20), testTexture);
-    planet_3.position.set(-3, 0, 0);
+    // // no está en el scene
+    // planet_3 = new THREE.Mesh(new THREE.SphereGeometry(0.4, 20, 20), testTexture);
+    // planet_3.position.set(-3, 0, 0);
 
-    // Asignar lunas a la órbita
-    moonOrbit.add(moon);
-    moonOrbit.add(planet_3);
-    */
+    // // Asignar lunas a la órbita
+    // moonOrbit.add(moon);
+    // moonOrbit.add(planet_3);
+    
 
     planet = newPlanet;
     return newPlanet;
 }
+*/
 
 // Esta funcion genera el planeta que se le pasa como parámetro
 function createSpecificObjectPlanet(planet){
@@ -201,6 +290,8 @@ function createSpecificObjectPlanet(planet){
     //Los atributos de SphereGeometry son scale, (algo que ver con ser esfera), (algo que ver con ser esfera)
     
     var newPlanet = new THREE.Mesh(new THREE.SphereGeometry(planet.scale, 20, 20), planetTexture);
+
+    console.log(planet.name);
 
     // Especificar posición
     newPlanet.position.set(planet.distance, 0, 0);
@@ -228,7 +319,11 @@ function createSpecificObjectPlanet(planet){
     moonOrbit.add(planet_3);
     */
 
-    planet = newPlanet;
+   // Combinar atributos de los dos objetos
+   for (var attrname in planet){
+       newPlanet[attrname] = planet[attrname];
+    }
+   
     return newPlanet;
 }
 
@@ -286,17 +381,16 @@ function createScene(canvas){
     scene.add(planetGroup);
 
     // Generar planetas
-    sun = createSpecificPlanet(sun, "sun", 1, -9);
-    //mercury = createSpecificPlanet(mercury, "mercury", 1, -6);
+    sun = createSpecificObjectPlanet(sun);
     mercury = createSpecificObjectPlanet(mercury);
-    venus = createSpecificPlanet(venus, "venus", 1, -3);
-    earth = createSpecificPlanet(earth, "earth", 1, 0);
-    mars = createSpecificPlanet(mars, "mars", 1, 3);
-    jupiter = createSpecificPlanet(jupiter, "jupiter", 1, 6);
-    saturn = createSpecificPlanet(saturn, "saturn", 1, 9);
-    uranus = createSpecificPlanet(uranus, "uranus", 1, 12);
-    neptune = createSpecificPlanet(neptune, "neptune", 1, 15);
-    pluto = createSpecificPlanet(pluto, "pluto", 1, 18);
+    venus = createSpecificObjectPlanet(venus);
+    earth = createSpecificObjectPlanet(earth);
+    mars = createSpecificObjectPlanet(mars);
+    jupiter = createSpecificObjectPlanet(jupiter);
+    saturn = createSpecificObjectPlanet(saturn);
+    uranus = createSpecificObjectPlanet(uranus);
+    neptune = createSpecificObjectPlanet(neptune);
+    pluto = createSpecificObjectPlanet(pluto);
 
     // Meter a array para poder hacer la rotación de un jalón
     planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune, pluto];
