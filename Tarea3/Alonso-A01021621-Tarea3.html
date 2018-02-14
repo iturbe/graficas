@@ -32,13 +32,15 @@
 		
 		// X-coordinate rotation
         var deltax = evt.pageX - pageX;
-        pageX = evt.pageX;
-		rotateScene(deltax);
+		pageX = evt.pageX;
 		
 		// Y-coordinate rotation
         var deltay = evt.pageY - pageY;
-        pageY = evt.pageY;
-        rotateSceneY(deltay);
+		pageY = evt.pageY;
+		
+		// Llamar la función
+		rotateScene(deltax, deltay);
+		
     }
 
     function onMouseDown(evt)

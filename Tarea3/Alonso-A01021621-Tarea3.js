@@ -60,16 +60,17 @@ function animate(){
     var angle = Math.PI * 2 * fract;
     var movement = now * 0.001;
 
-    // Rotate the cube about its Y axis
-    cube.rotation.y += angle;
 
-    // Rotate the sphere group about its Y axis
-    sphereGroup.rotation.y -= angle / 2;
+    // // Rotate the cube about its Y axis
+    // cube.rotation.y += angle;
 
-    sphere.rotation.x += angle;
+    // // Rotate the sphere group about its Y axis
+    // sphereGroup.rotation.y -= angle / 2;
 
-    // Rotate the cone about its X axis (tumble forward)
-    cone.rotation.z += angle;
+    // sphere.rotation.x += angle;
+
+    // // Rotate the cone about its X axis (tumble forward)
+    // cone.rotation.z += angle;
 
     // Rotación del planeta de prueba
     //testPlanet.rotation.y += angle;
@@ -233,6 +234,7 @@ function createScene(canvas){
     planetGroup.position.set(0,0,0);
     scene.add(planetGroup);
 
+    // Generar planetas
     sun = createSpecificPlanet(sun, "sun", 1, -5);
     mercury = createSpecificPlanet(mercury, "mercury", 2, 4);
     venus = createSpecificPlanet(venus, "venus", 0.99, 0.7);
@@ -271,73 +273,67 @@ function createScene(canvas){
     light.target.position.set(0,-2,0);
     sceneGroup.add(light);
 
+
+    // // Create a textre phong material for the cube
+    // // First, create the texture map
+    // var mapUrl = "images/turquoise-texture.jpg";
+    // var mapUrl = "images/ash_uvgrid01.jpg";
+    // var textureMap = new THREE.TextureLoader().load(mapUrl);
+    // var material = new THREE.MeshPhongMaterial({ map: textureMap });
+
+    // // Create the cube geometry
+    // var geometry = new THREE.CubeGeometry(2, 2, 2);
+
+    // // And put the geometry and material together into a mesh
+    // cube = new THREE.Mesh(geometry, material);
+
+    // // Tilt the mesh toward the viewer
+    // cube.rotation.x = Math.PI / 5;
+    // cube.rotation.y = Math.PI / 5;
+
+    // // Add the cube mesh to our group
+    // //sceneGroup.add( cube );
+    // //sceneGroup.position.set(-2.5, 0 ,0);
+
+    // // Create a group for the sphere
+    // sphereGroup = new THREE.Object3D;
+    // //sceneGroup.add(sphereGroup);
     
-    // Create a textre phong material for the cube
-    // First, create the texture map
-    var mapUrl = "images/turquoise-texture.jpg";
-    var mapUrl = "images/ash_uvgrid01.jpg";
-    var textureMap = new THREE.TextureLoader().load(mapUrl);
-    var material = new THREE.MeshPhongMaterial({ map: textureMap });
+    // // Move the sphere group up and back from the cube
+    // sphereGroup.position.set(0, 3, -4);
 
-    // Create the cube geometry
-    var geometry = new THREE.CubeGeometry(2, 2, 2);
-
-    // And put the geometry and material together into a mesh
-    cube = new THREE.Mesh(geometry, material);
-
-    // Tilt the mesh toward the viewer
-    cube.rotation.x = Math.PI / 5;
-    cube.rotation.y = Math.PI / 5;
-
-    // Add the cube mesh to our group
-    //sceneGroup.add( cube );
-    //sceneGroup.position.set(-2.5, 0 ,0);
-
-
-    // Create a group for the sphere
-    sphereGroup = new THREE.Object3D;
-    //sceneGroup.add(sphereGroup);
+    // // Create the sphere geometry
+    // geometry = new THREE.SphereGeometry(1, 20, 20);
     
-    // Move the sphere group up and back from the cube
-    sphereGroup.position.set(0, 3, -4);
+    // // And put the geometry and material together into a mesh
+    // sphere = new THREE.Mesh(geometry, material);
 
-    // Create the sphere geometry
-    geometry = new THREE.SphereGeometry(1, 20, 20);
-    
-    // And put the geometry and material together into a mesh
-    sphere = new THREE.Mesh(geometry, material);
+    // // Add the sphere mesh to our group
+    // sphereGroup.add( sphere );
 
-    // Add the sphere mesh to our group
-    sphereGroup.add( sphere );
+    // // Create the cone geometry
+    // geometry = new THREE.CylinderGeometry(0, .333, .444, 20, 5);
 
-    // Create the cone geometry
-    geometry = new THREE.CylinderGeometry(0, .333, .444, 20, 5);
+    // // And put the geometry and material together into a mesh
+    // cone = new THREE.Mesh(geometry, material);
 
-    // And put the geometry and material together into a mesh
-    cone = new THREE.Mesh(geometry, material);
-
-    // Move the cone up and out from the sphere
-    cone.position.set(1, 1, -.667);
+    // // Move the cone up and out from the sphere
+    // cone.position.set(1, 1, -.667);
         
-    // Add the cone mesh to our group
-    sphereGroup.add( cone );
+    // // Add the cone mesh to our group
+    // sphereGroup.add( cone );
     
     // Agregar el grupo de planetas de la derecha al sceneGroup para que también se vea afectado por los mouse/scale shifts
-    planetGroup.position.set(5, 0, 0);
+    planetGroup.position.set(-10, 0, 0);
     sceneGroup.add(planetGroup);
 
     // Now add the group to our scene
     scene.add( sceneGroup );
 }
 
-// Esta función quiero pensar que es el callback de cuando se rota la escena en x
-function rotateScene(deltax){
+// Rotar la escena
+function rotateScene(deltax, deltay){
     sceneGroup.rotation.y += deltax / 100;
-    $("#rotation").html("rotation:" + sceneGroup.rotation.x.toFixed(2) + "," + sceneGroup.rotation.y.toFixed(2) + ",0");
-}
-
-// Esta función la escribí yo basándome en la función de arriba
-function rotateSceneY(deltay){
     sceneGroup.rotation.x += deltay / 100;
     $("#rotation").html("rotation:" + sceneGroup.rotation.x.toFixed(2) + "," + sceneGroup.rotation.y.toFixed(2) + ",0");
 }
