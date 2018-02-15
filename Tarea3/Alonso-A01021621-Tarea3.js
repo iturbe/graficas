@@ -299,6 +299,15 @@ function createSpecificObjectPlanet(planet){
     // Agregar al grupo
     //planetGroup.add(newPlanet);
 
+    // Dibujar órbita
+    // TorusGeometry(radius, tube, radialSegments, tubularSegments, arc)
+    var orbita = new THREE.TorusGeometry(planet.distance, 0.05, 100, 100);
+    var material = new THREE.MeshBasicMaterial( { color: "white" } );
+    var torus = new THREE.Mesh( orbita, material );
+    torus.rotation.x = Math.PI / 2;
+    torus.position.set(0, 0, 0);
+    planetGroup.add(torus);
+
     // Creación de lunas en caso de ser necesario
     if (planet.hasMoons) {
         
