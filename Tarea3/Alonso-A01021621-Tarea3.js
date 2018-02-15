@@ -11,22 +11,20 @@
     ● TODO: Los planetas tienen que tener su propia rotación, además de que tienen que rotar alrededor del sol. Mismo caso para las respectivas lunas.
     ● TODO: Cada elemento tiene que tener materiales con texturas difusas, mapas de profundidad o de normales, y en caso de que encuentren, de specularidad.
         ○ Pueden encontrar varias texturas en: http://planetpixelemporium.com/mars.html
-    ● TODO: El sol es el emisor de la luz: Investigar el uso de point lights en ThreeJs.
+    ● FINISH: El sol es el emisor de la luz: Investigar el uso de point lights en ThreeJs.
     ● DONE: Controlar la rotación y escala de la escena.
 */
-
-var textcolor = "green";
 
 // Variables globales
 var renderer = null, 
 scene = null, 
 camera = null,
 sceneGroup = null,
+
 cube = null,
 sphereGroup = null,
 sphere = null,
 cone = null;
-
 
 var duration = 5000; // ms
 var currentTime = Date.now();
@@ -37,19 +35,23 @@ var sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune, pluto;
 
 // TODO: texturas de lunas y valores adecuados
 
+var newSun;
+
 sun = {
     name:"sun",
     scale:1,
-    distance: -9,
+    distance: 0,
     orbitSpeed:1,
     rotationSpeed:1,
+    orbits : [],
+    planets : []
 }
 
 mercury = {
     name:"mercury",
     scale:1,
-    distance: -6,
-    orbitSpeed:1,
+    distance: 3,
+    orbitSpeed:5,
     rotationSpeed:5,
     hasMoons:false,
     numberOfMoons:0
@@ -58,8 +60,8 @@ mercury = {
 venus = {
     name:"venus",
     scale:1,
-    distance: -3,
-    orbitSpeed:1,
+    distance: 6,
+    orbitSpeed:6,
     rotationSpeed:1,
     hasMoons:false,
     numberOfMoons:0
@@ -71,7 +73,6 @@ var earthGroup;
 var moon = {
     name:"moon",
     scale:0.3,
-    position: 1,
     distance: 1,
     orbitSpeed:1,
     rotationSpeed:5,
@@ -81,7 +82,7 @@ var moon = {
 earth = {
     name:"earth",
     scale:1,
-    distance: 0,
+    distance: 9,
     orbitSpeed:1,
     rotationSpeed:1,
     hasMoons:true,
@@ -95,7 +96,6 @@ var phobos, deimos;
 phobos = {
     name:"phobos",
     scale:0.3,
-    position: 1,
     distance: 1,
     orbitSpeed:1,
     rotationSpeed:5,
@@ -105,7 +105,6 @@ phobos = {
 deimos = {
     name:"deimos",
     scale:0.3,
-    position: 1,
     distance: 1,
     orbitSpeed:1,
     rotationSpeed:5,
@@ -115,8 +114,8 @@ deimos = {
 mars = {
     name:"mars",
     scale:1,
-    distance: 3,
-    orbitSpeed:1,
+    distance: 12,
+    orbitSpeed:6,
     rotationSpeed:1,
     hasMoons:false,
     numberOfMoons:2,
@@ -127,8 +126,8 @@ mars = {
 jupiter = {
     name:"jupiter",
     scale:1,
-    distance: 6,
-    orbitSpeed:1,
+    distance: 15,
+    orbitSpeed:8,
     rotationSpeed:1,
     hasMoons:false,
     numberOfMoons:0
@@ -137,8 +136,8 @@ jupiter = {
 saturn = {
     name:"saturn",
     scale:1,
-    distance: 9,
-    orbitSpeed:1,
+    distance: 18,
+    orbitSpeed:9,
     rotationSpeed:1,
     hasMoons:false,
     numberOfMoons:0
@@ -147,7 +146,7 @@ saturn = {
 uranus = {
     name:"uranus",
     scale:1,
-    distance: 12,
+    distance: 21,
     orbitSpeed:1,
     rotationSpeed:1,
     hasMoons:false,
@@ -157,7 +156,7 @@ uranus = {
 neptune = {
     name:"neptune",
     scale:1,
-    distance: 15,
+    distance: 24,
     orbitSpeed:1,
     rotationSpeed:1,
     hasMoons:false,
@@ -167,12 +166,14 @@ neptune = {
 pluto = {
     name:"pluto",
     scale:1,
-    distance: 18,
+    distance: 27,
     orbitSpeed:1,
     rotationSpeed:1,
     hasMoons:false,
     numberOfMoons:0
 }
+
+var planets;
 
 // Sun planets
 var sunGroup;
@@ -193,7 +194,8 @@ var miranda;
 // Neptune Moons
 var triton;
 
-//var planetGroup, testPlanet;
+var planetGroup;
+//testPlanet;
 
 // Aquí se encuentran definidas las animaciones (orbitas y rotaciones del planeta azul y su luna)
 function animate(){
@@ -204,8 +206,11 @@ function animate(){
     var angle = Math.PI * 2 * fract;
     var movement = now * 0.001;
 
-    // Rotar los planetas de acuerdo con su velocidad
+    // Actualizar cada planeta
     for (let index = 0; index < planets.length; index++) {
+
+        newSun.orbits[index].rotation.y += angle * newSun.planets[index].orbitSpeed;
+        
         planets[index].rotation.y += angle * planets[index].rotationSpeed;
 
         // Rotar orbitas de lunas de cada planeta
@@ -285,13 +290,14 @@ function createSpecificObjectPlanet(planet){
     //Los atributos de SphereGeometry son scale, (algo que ver con ser esfera), (algo que ver con ser esfera)
     var newPlanet = new THREE.Mesh(new THREE.SphereGeometry(planet.scale, 20, 20), planetTexture);
 
-    console.log("Creating " + planet.name);
+    //console.log("Creating " + planet.name);
+    //console.log(planet);
 
     // Especificar posición
-    newPlanet.position.set(planet.distance, 0, 0);
+    //newPlanet.position.set(planet.distance, 0, 0);
 
     // Agregar al grupo
-    planetGroup.add(newPlanet);
+    //planetGroup.add(newPlanet);
 
     // Creación de lunas en caso de ser necesario
     if (planet.hasMoons) {
@@ -309,83 +315,89 @@ function createSpecificObjectPlanet(planet){
             var moonTexture = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("images/"+planet.moons[index].name+"map.jpg")});
             
             var newMoon = new THREE.Mesh(new THREE.SphereGeometry(planet.moons[index].scale, 20, 20), moonTexture);
-            newMoon.position.set(planet.moons[index].position, planet.moons[index].position, 0);
+            newMoon.position.set(planet.moons[index].distance, planet.moons[index].distance, 0);
 
             // Asignar lunas a la órbita
             moonOrbit.add(newMoon);
-
+            
+            // Agregar órbita al objeto de órbita del planeta para poder actualizarlo
             newPlanet.moonOrbit = moonOrbit;
 
             // Combinar objetos de luna
-            planet.moons[index] = combine(planet.moons[index], newMoon);
+            //planet.moons[index] = combine(planet.moons[index], newMoon);
+            planet.moons[index] = addProperties(newMoon, planet.moons[index]);
         }
     }
     
     // Retornar el combinado
-    return combine(planet, newPlanet);
+    //return combine(planet, newPlanet);
+    return addProperties(newPlanet, planet);
 }
 
-/*
+
 // Esta funcion genera el sol
 function createSun(sun){
 
     // Cargar textura
     var sunTexture = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("images/"+sun.name+"map.jpg")});
 
-    // Generar planeta
-    //Los atributos de SphereGeometry son scale, (algo que ver con ser esfera), (algo que ver con ser esfera)
-    var newPlanet = new THREE.Mesh(new THREE.SphereGeometry(sun.scale, 20, 20), sunTexture);
+    // Generar sol
+    var newSun = new THREE.Mesh(new THREE.SphereGeometry(sun.scale, 20, 20), sunTexture);
 
-    console.log("Creating " + sun.name);
+    //console.log("Creating " + sun.name);
 
-    // Especificar posición
-    newPlanet.position.set(sun.distance, 0, 0);
+    // Movido abajo
+    // // Especificar posición
+    // newSun.position.set(0, 0, 0);
 
-    // Agregar al grupo
-    planetGroup.add(newPlanet);
+    // // Agregar al grupo de planetas
+    // planetGroup.add(newSun);
 
-    // Generar órbitas de planetas
-    for (planet in sun.planets) {
+    //console.log("1");
+    //console.log(sun.planets);
+
+    // Generar planetas y órbitas
+    for (let index = 0; index < sun.planets.length; index++) {
+        //console.log("2");
+        //console.log(sun.planets[index]);
         
-        // Crear orbita de planetas
+        // Crear planeta
+        var myPlanet = createSpecificObjectPlanet(sun.planets[index]);
+
+        // Agregar al grupo
+        planetGroup.add(myPlanet);
+
+        // Posicionar a la distancia adecuada
+        myPlanet.position.set(myPlanet.distance, 0, 0);
+
+        // Crear orbita del planeta
         var planetOrbit = new THREE.Group();
 
-        // Asignar orbita de al sol
-        newPlanet.add(planetOrbit);
+        // Asignar planeta a la órbita
+        planetOrbit.add(myPlanet);
 
-        planet.position.set(planet.distance, 0, 0);
+        // Asignar orbita de planeta al sol
+        newSun.add(planetOrbit);
+        
+        // Agregar órbita al arreglo de órbitas
+        sun.orbits.push(planetOrbit);
 
-        // Asignar planets a la órbita
-        planetOrbit.add(planet);
-
-        sun.orbits = 
-
+        // Actualizar planeta en arreglo
+        sun.planets[index] = myPlanet;
     }
 
-    // Creación de lunas en caso de ser necesario
-    if (sun.hasMoons) {
+    var finalSun = addProperties(newSun, sun)
+    
+    // Especificar posición
+    finalSun.position.set(0, 0, 0);
 
-        // Iterar para crear todas las lunas necesarias
-        for (let index = 0; index < sun.moons.length; index++) {
-
-            // Cargar textura
-            var moonTexture = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("images/"+sun.moons[index].name+"map.jpg")});
-            
-            var newMoon = new THREE.Mesh(new THREE.SphereGeometry(sun.moons[index].scale, 20, 20), moonTexture);
-            newMoon.position.set(sun.moons[index].position, sun.moons[index].position, 0);
-
-
-            newPlanet.moonOrbit = planetOrbit;
-
-            // Combinar objetos de luna
-            sun.moons[index] = combine(sun.moons[index], newMoon);
-        }
-    }
+    // Agregar al grupo de planetas
+    planetGroup.add(finalSun);
     
     // Retornar el combinado
-    return combine(sun, newPlanet);
+    //return combine(sun, newSun);
+    return finalSun;
 }
-*/
 
 // Combinar atributos de dos objetos
 function combine(obj1, obj2){
@@ -413,6 +425,21 @@ function combine(obj1, obj2){
     return extended;
 }
 
+// Combinar atributos de dos objetos
+function addProperties(threeObject, myObject){
+     
+     // Agregar todas las propiedades de mi objeto a el ThreeJS Object
+     for (var prop in myObject) {
+         if (myObject.hasOwnProperty(prop)) {
+             // Push each value from "myObject" into "threeObject"
+             threeObject[prop] = myObject[prop];
+         }
+     }
+     
+     // Retornar el combinado
+     return threeObject;
+ }
+
 // Esta función genera el grupo de figuras de la izquierda
 function createScene(canvas){    
 
@@ -431,21 +458,28 @@ function createScene(canvas){
     scene.add(planetGroup);
 
     // Generar planetas
-    mercury = createSpecificObjectPlanet(mercury);
-    venus = createSpecificObjectPlanet(venus);
-    earth = createSpecificObjectPlanet(earth);
-    mars = createSpecificObjectPlanet(mars);
-    jupiter = createSpecificObjectPlanet(jupiter);
-    saturn = createSpecificObjectPlanet(saturn);
-    uranus = createSpecificObjectPlanet(uranus);
-    neptune = createSpecificObjectPlanet(neptune);
-    pluto = createSpecificObjectPlanet(pluto);
+    // mercury = createSpecificObjectPlanet(mercury);
+    // venus = createSpecificObjectPlanet(venus);
+    // earth = createSpecificObjectPlanet(earth);
+    // mars = createSpecificObjectPlanet(mars);
+    // jupiter = createSpecificObjectPlanet(jupiter);
+    // saturn = createSpecificObjectPlanet(saturn);
+    // uranus = createSpecificObjectPlanet(uranus);
+    // neptune = createSpecificObjectPlanet(neptune);
+    // pluto = createSpecificObjectPlanet(pluto);
     
+    // PLANETAS ANTIGUOS AQUÍ
     sun.planets = [mercury, venus, earth, mars, jupiter, saturn, uranus, neptune, pluto]
-    sun = createSpecificObjectPlanet(sun);
+    //console.log(sun.planets);
+    newSun = createSun(sun);
+
+    // LOS PLANETAS AHORA SON ELEMENTOS DE newSun, meter a var global
+    planets = newSun.planets;
+
+    console.log(newSun.orbits[0].rotation);
 
     // Meter a array para poder iterar todas las rotaciones
-    planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune, pluto];
+    //planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune, pluto];
 
     // Setup del background
     scene.background = new THREE.Color( 0.2, 0.2, 0.2 );
@@ -475,8 +509,8 @@ function createScene(canvas){
     // Crear luz de sol
     //color, intensity, distance, decay 
     var sunlight = new THREE.PointLight( 0xFFFF00, 1, 0, 2 );
-    sunlight.position.set(sun.position.x, sun.position.y, sun.position.z);
-    console.log(sun.position.x, sun.position.y, sun.position.z)
+    sunlight.position.set(sun.distance.x, sun.distance.y, sun.distance.z);
+    //console.log(sun.distance.x, sun.distance.y, sun.distance.z)
     sceneGroup.add(sunlight);
     
     // Agregar el grupo de planetas al sceneGroup para que también se vea afectado por los mouse/scale shifts
