@@ -5,13 +5,14 @@
 
 /*
     ● DONE: Crear un sistema solar con los 8 planetas (y plutón), con sus respectivas lunas, el sol, y el campo de asteroides.
+    ● TODO: Campo de asteroides
     ● TODO: Para los asteroides, y algunas lunas, investigar cómo funciona el obj loader, y cargar geometría de un obj.
     ● TODO: Los planetas, y sus respectivas órbitas, tienen que tener una escala similar a la real.
-    ● TODO: Dibujar la órbita que siguen los planetas.
-    ● TODO: Los planetas tienen que tener su propia rotación, además de que tienen que rotar alrededor del sol. Mismo caso para las respectivas lunas.
+    ● DONE: Dibujar la órbita que siguen los planetas.
+    ● DONE: Los planetas tienen que tener su propia rotación, además de que tienen que rotar alrededor del sol. Mismo caso para las respectivas lunas.
     ● TODO: Cada elemento tiene que tener materiales con texturas difusas, mapas de profundidad o de normales, y en caso de que encuentren, de specularidad.
         ○ Pueden encontrar varias texturas en: http://planetpixelemporium.com/mars.html
-    ● FINISH: El sol es el emisor de la luz: Investigar el uso de point lights en ThreeJs.
+    ● DONE: El sol es el emisor de la luz: Investigar el uso de point lights en ThreeJs.
     ● DONE: Controlar la rotación y escala de la escena.
 */
 
@@ -19,12 +20,7 @@
 var renderer = null, 
 scene = null, 
 camera = null,
-sceneGroup = null,
-
-cube = null,
-sphereGroup = null,
-sphere = null,
-cone = null;
+sceneGroup = null;
 
 var duration = 5000; // ms
 var currentTime = Date.now();
@@ -35,6 +31,7 @@ var sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune, pluto;
 
 // TODO: texturas de lunas y valores adecuados
 
+// Sol que generaremos a partir de la función createSun
 var newSun;
 
 sun = {
@@ -173,6 +170,7 @@ pluto = {
     numberOfMoons:0
 }
 
+// Arreglo de planetas para fácil manejo
 var planets;
 
 // Sun planets
@@ -194,10 +192,10 @@ var miranda;
 // Neptune Moons
 var triton;
 
+// Variable auxiliar para almacenar los planetas
 var planetGroup;
-//testPlanet;
 
-// Aquí se encuentran definidas las animaciones (orbitas y rotaciones del planeta azul y su luna)
+// Función para generar las animaciones
 function animate(){
     var now = Date.now();
     var deltat = now - currentTime;
@@ -206,26 +204,30 @@ function animate(){
     var angle = Math.PI * 2 * fract;
     var movement = now * 0.001;
 
+    // Actualizar rotación del sol
+    newSun.rotation.y += angle * newSun.rotationSpeed;
+
     // Actualizar cada planeta
     for (let index = 0; index < planets.length; index++) {
 
+        // Actualizar órbita
         newSun.orbits[index].rotation.y += angle * newSun.planets[index].orbitSpeed;
         
+        // Actualizar rotación
         planets[index].rotation.y += angle * planets[index].rotationSpeed;
 
         // Rotar orbitas de lunas de cada planeta
         if (planets[index].hasMoons) {
 
-            // Rotar órbita
+            // Rotar órbita de lunas
             planets[index].moonOrbit.rotation.y += angle;
 
-            // Rotar luna en sí
+            // Rotar las lunas en sí
             for (let moonIndex = 0; moonIndex < planets[index].moons.length; moonIndex++) {
                 planets[index].moons[moonIndex].rotation.y += angle * planets[index].moons[moonIndex].rotationSpeed;
             }
         }
     }
-
 }
 
 function run() {
@@ -290,20 +292,11 @@ function createSpecificObjectPlanet(planet){
     //Los atributos de SphereGeometry son scale, (algo que ver con ser esfera), (algo que ver con ser esfera)
     var newPlanet = new THREE.Mesh(new THREE.SphereGeometry(planet.scale, 20, 20), planetTexture);
 
-    //console.log("Creating " + planet.name);
-    //console.log(planet);
-
-    // Especificar posición
-    //newPlanet.position.set(planet.distance, 0, 0);
-
-    // Agregar al grupo
-    //planetGroup.add(newPlanet);
-
     // Dibujar órbita
     // TorusGeometry(radius, tube, radialSegments, tubularSegments, arc)
-    var orbita = new THREE.TorusGeometry(planet.distance, 0.05, 100, 100);
-    var material = new THREE.MeshBasicMaterial( { color: "white" } );
-    var torus = new THREE.Mesh( orbita, material );
+    var orbita = new THREE.TorusGeometry(planet.distance, 0.025, 100, 100);
+    var material = new THREE.MeshBasicMaterial( { color: "lightgray" } );
+    var torus = new THREE.Mesh(orbita, material);
     torus.rotation.x = Math.PI / 2;
     torus.position.set(0, 0, 0);
     planetGroup.add(torus);
@@ -322,8 +315,11 @@ function createSpecificObjectPlanet(planet){
 
             // Cargar textura
             var moonTexture = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("images/"+planet.moons[index].name+"map.jpg")});
-            
+
+            // Generar la luna
             var newMoon = new THREE.Mesh(new THREE.SphereGeometry(planet.moons[index].scale, 20, 20), moonTexture);
+            
+            // Establecer posición
             newMoon.position.set(planet.moons[index].distance, planet.moons[index].distance, 0);
 
             // Asignar lunas a la órbita
@@ -333,37 +329,24 @@ function createSpecificObjectPlanet(planet){
             newPlanet.moonOrbit = moonOrbit;
 
             // Combinar objetos de luna
-            //planet.moons[index] = combine(planet.moons[index], newMoon);
             planet.moons[index] = addProperties(newMoon, planet.moons[index]);
         }
     }
     
     // Retornar el combinado
-    //return combine(planet, newPlanet);
     return addProperties(newPlanet, planet);
 }
-
 
 // Esta funcion genera el sol
 function createSun(sun){
 
     // Cargar textura
-    var sunTexture = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("images/"+sun.name+"map.jpg")});
+    //var sunTexture = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("images/"+sun.name+"map.jpg"), emissive: "yellow", emissivemap:"images/"+sun.name+"map.jpg", emissiveIntensity:5});
+
+    var sunTexture = new THREE.MeshBasicMaterial({map: new THREE.TextureLoader().load("images/"+sun.name+"map.jpg")});
 
     // Generar sol
     var newSun = new THREE.Mesh(new THREE.SphereGeometry(sun.scale, 20, 20), sunTexture);
-
-    //console.log("Creating " + sun.name);
-
-    // Movido abajo
-    // // Especificar posición
-    // newSun.position.set(0, 0, 0);
-
-    // // Agregar al grupo de planetas
-    // planetGroup.add(newSun);
-
-    //console.log("1");
-    //console.log(sun.planets);
 
     // Generar planetas y órbitas
     for (let index = 0; index < sun.planets.length; index++) {
@@ -395,6 +378,7 @@ function createSun(sun){
         sun.planets[index] = myPlanet;
     }
 
+    // Agregar mis propiedades al 3D Object
     var finalSun = addProperties(newSun, sun)
     
     // Especificar posición
@@ -404,54 +388,26 @@ function createSun(sun){
     planetGroup.add(finalSun);
     
     // Retornar el combinado
-    //return combine(sun, newSun);
     return finalSun;
-}
-
-// Combinar atributos de dos objetos
-function combine(obj1, obj2){
-   
-   // Create new object in order to combine object properties
-   var extended = {};
-   
-   // Iterar el primer objeto
-   for (var prop in obj1) {
-       if (obj1.hasOwnProperty(prop)) {
-           // Push each value from `obj` into `extended`
-           extended[prop] = obj1[prop];
-        }
-    }
-    
-    // Iterar el segundo objeto
-    for (var prop in obj2) {
-        if (obj2.hasOwnProperty(prop)) {
-            // Push each value from `obj` into `extended`
-            extended[prop] = obj2[prop];
-        }
-    }
-    
-    // Retornar el combinado
-    return extended;
 }
 
 // Combinar atributos de dos objetos
 function addProperties(threeObject, myObject){
      
-     // Agregar todas las propiedades de mi objeto a el ThreeJS Object
-     for (var prop in myObject) {
-         if (myObject.hasOwnProperty(prop)) {
-             // Push each value from "myObject" into "threeObject"
-             threeObject[prop] = myObject[prop];
-         }
-     }
-     
-     // Retornar el combinado
-     return threeObject;
- }
+    // Agregar todas las propiedades de mi objeto a el ThreeJS Object
+    for (var prop in myObject) {
+        if (myObject.hasOwnProperty(prop)) {
+            // Push each value from "myObject" into "threeObject"
+            threeObject[prop] = myObject[prop];
+        }
+    }
+    // Retornar el combinado
+    return threeObject;
+}
 
-// Esta función genera el grupo de figuras de la izquierda
+// Esta función genera la escena
 function createScene(canvas){    
-
+    
     // Create the Three.js renderer and attach it to our canvas
     renderer = new THREE.WebGLRenderer( { canvas: canvas, antialias: true } );
 
@@ -461,34 +417,20 @@ function createScene(canvas){
     // Create a new Three.js scene
     scene = new THREE.Scene();
 
-    // Contenedor de planetas de la derecha
+    // Contenedor de planetas
     planetGroup = new THREE.Object3D();
     planetGroup.position.set(0,0,0);
     scene.add(planetGroup);
-
-    // Generar planetas
-    // mercury = createSpecificObjectPlanet(mercury);
-    // venus = createSpecificObjectPlanet(venus);
-    // earth = createSpecificObjectPlanet(earth);
-    // mars = createSpecificObjectPlanet(mars);
-    // jupiter = createSpecificObjectPlanet(jupiter);
-    // saturn = createSpecificObjectPlanet(saturn);
-    // uranus = createSpecificObjectPlanet(uranus);
-    // neptune = createSpecificObjectPlanet(neptune);
-    // pluto = createSpecificObjectPlanet(pluto);
     
     // PLANETAS ANTIGUOS AQUÍ
     sun.planets = [mercury, venus, earth, mars, jupiter, saturn, uranus, neptune, pluto]
     //console.log(sun.planets);
+    
+    // Generar el sol
     newSun = createSun(sun);
 
-    // LOS PLANETAS AHORA SON ELEMENTOS DE newSun, meter a var global
+    // Asignar los planetas a un arreglo para fácil manejo
     planets = newSun.planets;
-
-    console.log(newSun.orbits[0].rotation);
-
-    // Meter a array para poder iterar todas las rotaciones
-    //planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune, pluto];
 
     // Setup del background
     scene.background = new THREE.Color( 0.2, 0.2, 0.2 );
@@ -512,22 +454,28 @@ function createScene(canvas){
     // Position the light out from the scene, pointing at the origin
     light.position.set(-.5, .2, 1);
     light.target.position.set(0,-2,0);
-    sceneGroup.add(light);
+    //sceneGroup.add(light);
 
-    //TODO: arreglar la luz del sol
+    //DONE: arreglar la luz del sol
     // Crear luz de sol
     //color, intensity, distance, decay 
-    var sunlight = new THREE.PointLight( 0xFFFF00, 1, 0, 2 );
-    sunlight.position.set(sun.distance.x, sun.distance.y, sun.distance.z);
-    //console.log(sun.distance.x, sun.distance.y, sun.distance.z)
+    var sunlight = new THREE.PointLight( "white", 1, 0, 2 );
+    sunlight.position.set(0, 0, 0);
     sceneGroup.add(sunlight);
+
+    // Generar esfera enorme que engloba toda nuestra escena para generar el efecto de girar la perspectiva
+    var backgroundTexture = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("images/stars.jpg")});
+    var viewSphere = new THREE.Mesh(new THREE.SphereGeometry(100, 20, 20), backgroundTexture);
+    viewSphere.material.side = THREE.DoubleSide; // hacer que se vea desde adentro
+    sceneGroup.add(viewSphere);
+
     
     // Agregar el grupo de planetas al sceneGroup para que también se vea afectado por los mouse/scale shifts
     planetGroup.position.set(0, 0, 0);
     sceneGroup.add(planetGroup);
 
     // Now add the group to our scene
-    scene.add( sceneGroup );
+    scene.add(sceneGroup);
 }
 
 // Rotar la escena con el mouse
