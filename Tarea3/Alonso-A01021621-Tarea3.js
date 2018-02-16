@@ -28,6 +28,7 @@ var currentTime = Date.now();
 // PLANETS & MOONS
 // Planets
 var sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune, pluto;
+var asteroidBelt;
 
 // TODO: texturas de lunas y valores adecuados
 
@@ -36,7 +37,7 @@ var newSun;
 
 sun = {
     name:"sun",
-    scale:1,
+    scale:3.5,
     distance: 0,
     orbitSpeed:1,
     rotationSpeed:1,
@@ -46,22 +47,20 @@ sun = {
 
 mercury = {
     name:"mercury",
-    scale:1,
-    distance: 3,
-    orbitSpeed:5,
+    scale:0.4,
+    distance: 5,
+    orbitSpeed:9,
     rotationSpeed:5,
-    hasMoons:false,
-    numberOfMoons:0
+    moons : []
 }
 
 venus = {
     name:"venus",
     scale:1,
-    distance: 6,
-    orbitSpeed:6,
+    distance: 10,
+    orbitSpeed:8,
     rotationSpeed:1,
-    hasMoons:false,
-    numberOfMoons:0
+    moons : []
 }
 
 // Earth Moons
@@ -73,17 +72,15 @@ var moon = {
     distance: 1,
     orbitSpeed:1,
     rotationSpeed:5,
-    isMoon:true,
 }
 
 earth = {
     name:"earth",
     scale:1,
-    distance: 9,
-    orbitSpeed:1,
+    distance: 15,
+    orbitSpeed:7,
     rotationSpeed:1,
     hasMoons:true,
-    numberOfMoons:1,
     moons : [moon]
 }
 
@@ -110,64 +107,57 @@ deimos = {
 
 mars = {
     name:"mars",
-    scale:1,
-    distance: 12,
+    scale:0.5,
+    distance: 20,
     orbitSpeed:6,
-    rotationSpeed:1,
-    hasMoons:false,
-    numberOfMoons:2,
-    moons : {phobos, deimos}
+    rotationSpeed:6,
+    moons : []
 }
 
 // JUPITER & MOONS
 jupiter = {
     name:"jupiter",
-    scale:1,
-    distance: 15,
-    orbitSpeed:8,
+    scale:2.5,
+    distance: 25,
+    orbitSpeed:5,
     rotationSpeed:1,
-    hasMoons:false,
-    numberOfMoons:0
+    moons : []
 }
 
 saturn = {
     name:"saturn",
-    scale:1,
-    distance: 18,
-    orbitSpeed:9,
+    scale:1.5,
+    distance: 30,
+    orbitSpeed:4,
     rotationSpeed:1,
-    hasMoons:false,
-    numberOfMoons:0
+    moons : []
 }
 
 uranus = {
     name:"uranus",
-    scale:1,
-    distance: 21,
-    orbitSpeed:1,
+    scale:1.5,
+    distance: 35,
+    orbitSpeed:3,
     rotationSpeed:1,
-    hasMoons:false,
-    numberOfMoons:0
+    moons : []
 }
 
 neptune = {
     name:"neptune",
-    scale:1,
-    distance: 24,
-    orbitSpeed:1,
+    scale:1.5,
+    distance: 40,
+    orbitSpeed:2,
     rotationSpeed:1,
-    hasMoons:false,
-    numberOfMoons:0
+    moons : []
 }
 
 pluto = {
     name:"pluto",
-    scale:1,
-    distance: 27,
+    scale:0.5,
+    distance: 45,
     orbitSpeed:1,
     rotationSpeed:1,
-    hasMoons:false,
-    numberOfMoons:0
+    moons : []
 }
 
 // Arreglo de planetas para fácil manejo
@@ -211,13 +201,13 @@ function animate(){
     for (let index = 0; index < planets.length; index++) {
 
         // Actualizar órbita
-        newSun.orbits[index].rotation.y += angle * newSun.planets[index].orbitSpeed;
+        newSun.orbits[index].rotation.y += angle * newSun.planets[index].orbitSpeed * 1/8;
         
         // Actualizar rotación
         planets[index].rotation.y += angle * planets[index].rotationSpeed;
 
         // Rotar orbitas de lunas de cada planeta
-        if (planets[index].hasMoons) {
+        if (planets[index].moons.length > 0) {
 
             // Rotar órbita de lunas
             planets[index].moonOrbit.rotation.y += angle;
@@ -294,12 +284,30 @@ function createSpecificObjectPlanet(planet){
 
     // Dibujar órbita
     // TorusGeometry(radius, tube, radialSegments, tubularSegments, arc)
-    var orbita = new THREE.TorusGeometry(planet.distance, 0.025, 100, 100);
+    var orbita = new THREE.TorusGeometry(planet.distance, 0.005, 100, 100);
     var material = new THREE.MeshBasicMaterial( { color: "lightgray" } );
     var torus = new THREE.Mesh(orbita, material);
     torus.rotation.x = Math.PI / 2;
     torus.position.set(0, 0, 0);
     planetGroup.add(torus);
+
+    // Crear anillos
+    if (planet.name === "saturn") {
+        // Crear orbita de lunas
+        var ringContainer = new THREE.Group();
+
+        // Asignar orbita de lunas al planeta
+        newPlanet.add(ringContainer);
+
+        // Hacer anillos
+        var ringMaterial = new THREE.MeshBasicMaterial( {color: 0xB5987A , side: THREE.DoubleSide } );
+        //RingGeometry(innerRadius, outerRadius, thetaSegments, phiSegments, thetaStart, thetaLength)
+        var ring = new THREE.Mesh(new THREE.RingGeometry(planet.scale+0.1, planet.scale+0.2, 35), ringMaterial);
+        //ring.rotation.x = 50;
+        ring.rotation.set(45, 0, 0);
+
+        ringContainer.add(ring);
+    }
 
     // Creación de lunas en caso de ser necesario
     if (planet.hasMoons) {
@@ -459,12 +467,12 @@ function createScene(canvas){
     //DONE: arreglar la luz del sol
     // Crear luz de sol
     //color, intensity, distance, decay 
-    var sunlight = new THREE.PointLight( "white", 1, 0, 2 );
+    var sunlight = new THREE.PointLight("white", 1.5, 0, 2);
     sunlight.position.set(0, 0, 0);
     sceneGroup.add(sunlight);
 
     // Generar esfera enorme que engloba toda nuestra escena para generar el efecto de girar la perspectiva
-    var backgroundTexture = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("images/stars.jpg")});
+    var backgroundTexture = new THREE.MeshBasicMaterial({map: new THREE.TextureLoader().load("images/stars.jpg")});
     var viewSphere = new THREE.Mesh(new THREE.SphereGeometry(100, 20, 20), backgroundTexture);
     viewSphere.material.side = THREE.DoubleSide; // hacer que se vea desde adentro
     sceneGroup.add(viewSphere);
