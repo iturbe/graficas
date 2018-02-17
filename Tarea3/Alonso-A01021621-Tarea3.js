@@ -5,8 +5,8 @@
 
 /*
     ● DONE: Crear un sistema solar con los 8 planetas (y plutón), con sus respectivas lunas, el sol, y el campo de asteroides.
-    ● TODO: Campo de asteroides
-    ● TODO: Para los asteroides, y algunas lunas, investigar cómo funciona el obj loader, y cargar geometría de un obj.
+    ● DONE: Campo de asteroides
+    ● TODO (EXTRA): Para los asteroides, y algunas lunas, investigar cómo funciona el obj loader, y cargar geometría de un obj.
     ● DONE: Los planetas, y sus respectivas órbitas, tienen que tener una escala similar a la real.
     ● DONE: Dibujar la órbita que siguen los planetas.
     ● DONE: Los planetas tienen que tener su propia rotación, además de que tienen que rotar alrededor del sol. Mismo caso para las respectivas lunas.
@@ -30,7 +30,7 @@ var currentTime = Date.now();
 var sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune, pluto;
 var asteroidBelt;
 
-// TODO: texturas de lunas y valores adecuados
+// TODO: texturas, cantidad y posicionamiento de lunas
 
 // Sol que generaremos a partir de la función createSun
 var newSun;
@@ -68,7 +68,7 @@ venus = {
 // Earth Moons
 var earthGroup;
 
-var moon = {
+var asteroid = {
     name:"moon",
     scale:0.3,
     distance: 1,
@@ -87,7 +87,7 @@ earth = {
     rotationSpeed:1,
     hasMoons:true,
     rings:0,
-    moons : [moon]
+    moons : [asteroid]
 }
 
 // MARS & MOONS
@@ -101,34 +101,34 @@ mars = {
     rotationSpeed:6,
     rings:0,
     hasMoons: true,
-    moons : [moon, moon]
+    moons : [asteroid, asteroid]
 }
 
 // JUPITER & MOONS
 jupiter = {
     name:"jupiter",
     scale:2.5,
-    distance: 25,
+    distance: 30,
     orbitSpeed:5,
     rotationSpeed:1,
-    rings:3,
+    rings:0.05,
     moons : []
 }
 
 saturn = {
     name:"saturn",
     scale:1.5,
-    distance: 30,
+    distance: 35,
     orbitSpeed:4,
     rotationSpeed:1,
-    rings:30,
+    rings:1,
     moons : []
 }
 
 uranus = {
     name:"uranus",
     scale:1.5,
-    distance: 35,
+    distance: 40,
     orbitSpeed:3,
     rotationSpeed:1,
     rings:0,
@@ -138,7 +138,7 @@ uranus = {
 neptune = {
     name:"neptune",
     scale:1.5,
-    distance: 40,
+    distance: 45,
     orbitSpeed:2,
     rotationSpeed:1,
     rings:0,
@@ -148,12 +148,14 @@ neptune = {
 pluto = {
     name:"pluto",
     scale:0.5,
-    distance: 45,
+    distance: 50,
     orbitSpeed:1,
     rotationSpeed:1,
     rings:0,
     moons : []
 }
+
+var asteroidBelt;
 
 // Arreglo de planetas para fácil manejo
 var planets;
@@ -190,7 +192,10 @@ function animate(){
     var movement = now * 0.001;
 
     // Actualizar rotación del sol
-    newSun.rotation.y += angle * newSun.rotationSpeed;
+    newSun.rotation.y += angle * newSun.rotationSpeed * 0.5;
+
+    // Actualizar rotación del campo de asteroides
+    asteroidBelt.rotation.y += angle;
 
     // Actualizar cada planeta
     for (let index = 0; index < planets.length; index++) {
@@ -213,6 +218,7 @@ function animate(){
             }
         }
     }
+    
 }
 
 function run() {
@@ -226,48 +232,39 @@ function run() {
             
 }
 
-/*
-// Esta funcion genera el planeta azul de la derecha y sus lunas
-function createPlanet(){
+// Esta funcion genera el campo de asteroides
+function createAsteroidBelt(){
+
+    // Cargar textura de asteroide
+    var asteroidTexture = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("images/asteroid.jpg")});
+
+    // Grupo para contener todos los asteroides
+    var asteroidBelt = new THREE.Group();
+
+    // Agregar a la escena
+    planetGroup.add(asteroidBelt);
+
+    // Crear 20 asteroides
+    var howManyAsteroids = 50;
+    var angle = 0;
+
+    for (let a = 0; a < howManyAsteroids; a++) {
+
+        // Generar asteroide
+        var asteroid = new THREE.Mesh(new THREE.SphereGeometry(0.5, 20, 20), asteroidTexture);
+
+        // Agregar al container
+        asteroidBelt.add(asteroid);
+
+        // Rotar el contenedor
+        angle = (360/howManyAsteroids) * (Math.PI/180) * a;
+        
+        // Posicionar equitativamente distribuido en el perímetro
+        asteroid.position.set(Math.cos(angle)*25, 0, Math.sin(angle)*25);
+    }
     
-    // Cargar UV Colors texture (una manera de cargar textura)
-    var mapUrl = "images/ash_uvgrid01.jpg";
-    var textureMap = new THREE.TextureLoader().load(mapUrl);
-    var UVMaterial = new THREE.MeshPhongMaterial({ map: textureMap });
-
-    // Companion Cube texture (Otra manera de cargar textura)
-    var companionCubeTexture = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("images/companionCube.png")});
-
-    // Cargar turquoise texture
-    var turquoiseTexture = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("images/turquoise-texture.jpg")});
-
-    // Cargar test texture
-    var testTexture = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("images/test1.png")});
-    
-    // Esfera con luna
-    //Los atributos de SphereGeometry son scale, (algo que ver con ser esfera), (algo que ver con ser esfera)
-    testPlanet = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 20), UVMaterial);
-    moonOrbit = new THREE.Group();
-    // Luna de esfera
-    moon = new THREE.Mesh(new THREE.SphereGeometry(0.4, 20, 20), companionCubeTexture);
-    moon.position.set(1.5, 0, 0);
-
-    // no está en el scene
-    planet_3 = new THREE.Mesh(new THREE.SphereGeometry(0.4, 20, 20), testTexture);
-    planet_3.position.set(-3, 0, 0);
-
-    // Agregar el planeta al grupo
-    planetGroup.add(testPlanet);
-
-    // Asignar orbita de lunas al planeta
-    testPlanet.add(moonOrbit);
-
-    // Asignar lunas a la órbita
-    moonOrbit.add(moon);
-    moonOrbit.add(planet_3);
-    
+    return asteroidBelt;
 }
-*/
 
 // Esta funcion genera el planeta que se le pasa como parámetro
 function createSpecificObjectPlanet(planet){
@@ -300,7 +297,7 @@ function createSpecificObjectPlanet(planet){
         var ringMaterial = new THREE.MeshBasicMaterial({color:0xB5987A , side:THREE.DoubleSide});
         //RingGeometry(innerRadius, outerRadius, thetaSegments, phiSegments, thetaStart, thetaLength)
 
-        var ring = new THREE.Mesh(new THREE.RingGeometry(planet.scale+ring/10, planet.scale+(ring/10)+0.1, 35), ringMaterial);
+        var ring = new THREE.Mesh(new THREE.RingGeometry(planet.scale + 0.1, planet.scale + planet.rings, 35), ringMaterial);
         //ring.rotation.x = 50;
         ring.rotation.set(45, 0, 0);
         ringContainer.add(ring);
@@ -452,11 +449,12 @@ function createScene(canvas){
     // Asignar los planetas a un arreglo para fácil manejo
     planets = newSun.planets;
 
-    // // Crear campo de asteroides
-    // asteroidBelt = createAsteroidBelt(asteroidSetup);
+    // Crear campo de asteroides
+    asteroidBelt = createAsteroidBelt();
 
-    // // Agregar al arreglo para que funcione la rotación
-    // planets.push(asteroidBelt);
+    
+    //scene.add(asteroidBelt);
+    //planets.push(asteroidBelt);
 
     // Setup del background
     scene.background = new THREE.Color( 0.2, 0.2, 0.2 );
@@ -495,7 +493,6 @@ function createScene(canvas){
     viewSphere.material.side = THREE.DoubleSide; // hacer que se vea desde adentro
     sceneGroup.add(viewSphere);
 
-    
     // Agregar el grupo de planetas al sceneGroup para que también se vea afectado por los mouse/scale shifts
     planetGroup.position.set(0, 0, 0);
     sceneGroup.add(planetGroup);
