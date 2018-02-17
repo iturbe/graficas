@@ -7,7 +7,7 @@
     ● DONE: Crear un sistema solar con los 8 planetas (y plutón), con sus respectivas lunas, el sol, y el campo de asteroides.
     ● TODO: Campo de asteroides
     ● TODO: Para los asteroides, y algunas lunas, investigar cómo funciona el obj loader, y cargar geometría de un obj.
-    ● TODO: Los planetas, y sus respectivas órbitas, tienen que tener una escala similar a la real.
+    ● DONE: Los planetas, y sus respectivas órbitas, tienen que tener una escala similar a la real.
     ● DONE: Dibujar la órbita que siguen los planetas.
     ● DONE: Los planetas tienen que tener su propia rotación, además de que tienen que rotar alrededor del sol. Mismo caso para las respectivas lunas.
     ● TODO: Cada elemento tiene que tener materiales con texturas difusas, mapas de profundidad o de normales, y en caso de que encuentren, de specularidad.
@@ -51,6 +51,7 @@ mercury = {
     distance: 5,
     orbitSpeed:9,
     rotationSpeed:5,
+    rings:0,
     moons : []
 }
 
@@ -60,6 +61,7 @@ venus = {
     distance: 10,
     orbitSpeed:8,
     rotationSpeed:1,
+    rings:0,
     moons : []
 }
 
@@ -70,6 +72,9 @@ var moon = {
     name:"moon",
     scale:0.3,
     distance: 1,
+    xdistance: 1,
+    ydistance: 1,
+    zdistance: 1,
     orbitSpeed:1,
     rotationSpeed:5,
 }
@@ -81,29 +86,12 @@ earth = {
     orbitSpeed:7,
     rotationSpeed:1,
     hasMoons:true,
+    rings:0,
     moons : [moon]
 }
 
 // MARS & MOONS
 var phobos, deimos;
-
-phobos = {
-    name:"phobos",
-    scale:0.3,
-    distance: 1,
-    orbitSpeed:1,
-    rotationSpeed:5,
-    isMoon:true,
-}
-
-deimos = {
-    name:"deimos",
-    scale:0.3,
-    distance: 1,
-    orbitSpeed:1,
-    rotationSpeed:5,
-    isMoon:true,
-}
 
 mars = {
     name:"mars",
@@ -111,7 +99,9 @@ mars = {
     distance: 20,
     orbitSpeed:6,
     rotationSpeed:6,
-    moons : []
+    rings:0,
+    hasMoons: true,
+    moons : [moon, moon]
 }
 
 // JUPITER & MOONS
@@ -121,6 +111,7 @@ jupiter = {
     distance: 25,
     orbitSpeed:5,
     rotationSpeed:1,
+    rings:3,
     moons : []
 }
 
@@ -130,6 +121,7 @@ saturn = {
     distance: 30,
     orbitSpeed:4,
     rotationSpeed:1,
+    rings:30,
     moons : []
 }
 
@@ -139,6 +131,7 @@ uranus = {
     distance: 35,
     orbitSpeed:3,
     rotationSpeed:1,
+    rings:0,
     moons : []
 }
 
@@ -148,6 +141,7 @@ neptune = {
     distance: 40,
     orbitSpeed:2,
     rotationSpeed:1,
+    rings:0,
     moons : []
 }
 
@@ -157,6 +151,7 @@ pluto = {
     distance: 45,
     orbitSpeed:1,
     rotationSpeed:1,
+    rings:0,
     moons : []
 }
 
@@ -201,7 +196,7 @@ function animate(){
     for (let index = 0; index < planets.length; index++) {
 
         // Actualizar órbita
-        newSun.orbits[index].rotation.y += angle * newSun.planets[index].orbitSpeed * 1/8;
+        newSun.orbits[index].rotation.y += angle * newSun.planets[index].orbitSpeed * 1/16;
         
         // Actualizar rotación
         planets[index].rotation.y += angle * planets[index].rotationSpeed;
@@ -231,6 +226,7 @@ function run() {
             
 }
 
+/*
 // Esta funcion genera el planeta azul de la derecha y sus lunas
 function createPlanet(){
     
@@ -271,6 +267,7 @@ function createPlanet(){
     moonOrbit.add(planet_3);
     
 }
+*/
 
 // Esta funcion genera el planeta que se le pasa como parámetro
 function createSpecificObjectPlanet(planet){
@@ -292,7 +289,7 @@ function createSpecificObjectPlanet(planet){
     planetGroup.add(torus);
 
     // Crear anillos
-    if (planet.name === "saturn") {
+    if (planet.rings > 0) {
         // Crear orbita de lunas
         var ringContainer = new THREE.Group();
 
@@ -300,12 +297,12 @@ function createSpecificObjectPlanet(planet){
         newPlanet.add(ringContainer);
 
         // Hacer anillos
-        var ringMaterial = new THREE.MeshBasicMaterial( {color: 0xB5987A , side: THREE.DoubleSide } );
+        var ringMaterial = new THREE.MeshBasicMaterial({color:0xB5987A , side:THREE.DoubleSide});
         //RingGeometry(innerRadius, outerRadius, thetaSegments, phiSegments, thetaStart, thetaLength)
-        var ring = new THREE.Mesh(new THREE.RingGeometry(planet.scale+0.1, planet.scale+0.2, 35), ringMaterial);
+
+        var ring = new THREE.Mesh(new THREE.RingGeometry(planet.scale+ring/10, planet.scale+(ring/10)+0.1, 35), ringMaterial);
         //ring.rotation.x = 50;
         ring.rotation.set(45, 0, 0);
-
         ringContainer.add(ring);
     }
 
@@ -314,6 +311,9 @@ function createSpecificObjectPlanet(planet){
         
         // Crear orbita de lunas
         var moonOrbit = new THREE.Group();
+
+        // Inclinar órbita de lunas
+        moonOrbit.rotation.set(45, 0, 0);
 
         // Asignar orbita de lunas al planeta
         newPlanet.add(moonOrbit);
@@ -326,9 +326,21 @@ function createSpecificObjectPlanet(planet){
 
             // Generar la luna
             var newMoon = new THREE.Mesh(new THREE.SphereGeometry(planet.moons[index].scale, 20, 20), moonTexture);
+
+            // var xPosition = planet.scale + planet.moons[index].xdistance;
+            // var yPosition = planet.scale + planet.moons[index].ydistance;
+            // var zPosition = planet.scale + planet.moons[index].zdistance;
+
+            // TODO: Que las lunas se puedan randomizar sin encimarse
+
+            var xPosition = planet.scale + Math.random();
+            var yPosition = Math.random();
+            var zPosition = Math.random();
+
+            console.log(xPosition + " " + yPosition + " " + zPosition);
             
             // Establecer posición
-            newMoon.position.set(planet.moons[index].distance, planet.moons[index].distance, 0);
+            newMoon.position.set(xPosition, yPosition, zPosition);
 
             // Asignar lunas a la órbita
             moonOrbit.add(newMoon);
@@ -439,6 +451,12 @@ function createScene(canvas){
 
     // Asignar los planetas a un arreglo para fácil manejo
     planets = newSun.planets;
+
+    // // Crear campo de asteroides
+    // asteroidBelt = createAsteroidBelt(asteroidSetup);
+
+    // // Agregar al arreglo para que funcione la rotación
+    // planets.push(asteroidBelt);
 
     // Setup del background
     scene.background = new THREE.Color( 0.2, 0.2, 0.2 );
