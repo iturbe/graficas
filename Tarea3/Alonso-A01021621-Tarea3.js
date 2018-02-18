@@ -111,7 +111,7 @@ jupiter = {
     distance: 30,
     orbitSpeed:5,
     rotationSpeed:1,
-    rings:0.05,
+    rings:0.0,
     moons : []
 }
 
@@ -131,7 +131,7 @@ uranus = {
     distance: 40,
     orbitSpeed:3,
     rotationSpeed:1,
-    rings:0,
+    rings:0.05,
     moons : []
 }
 
@@ -141,7 +141,7 @@ neptune = {
     distance: 45,
     orbitSpeed:2,
     rotationSpeed:1,
-    rings:0,
+    rings:0.05,
     moons : []
 }
 
@@ -191,6 +191,7 @@ function animate(){
     var angle = Math.PI * 2 * fract;
     var movement = now * 0.001;
 
+    
     // Actualizar rotación del sol
     newSun.rotation.y += angle * newSun.rotationSpeed * 0.5;
 
@@ -236,7 +237,7 @@ function run() {
 function createAsteroidBelt(){
 
     // Cargar textura de asteroide
-    var asteroidTexture = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("images/asteroid.jpg")});
+    var asteroidTexture = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("images/asteroid.jpg"), bumpMap: new THREE.TextureLoader().load("images/moonbump.jpg"), bumpScale:0.5});
 
     // Grupo para contener todos los asteroides
     var asteroidBelt = new THREE.Group();
@@ -269,8 +270,15 @@ function createAsteroidBelt(){
 // Esta funcion genera el planeta que se le pasa como parámetro
 function createSpecificObjectPlanet(planet){
 
-    // Cargar textura
-    var planetTexture = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("images/"+planet.name+"map.jpg")});
+    if (true) {
+        // Cargar textura con bumpmap
+        var planetTexture = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("images/"+planet.name+"map.jpg"), bumpMap: new THREE.TextureLoader().load("images/"+planet.name+"bump.jpg"), bumpScale: 0.1});
+        //console.log("firing for mercury");
+        
+    } else {
+        // Cargar textura
+        var planetTexture = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("images/"+planet.name+"map.jpg")});
+    }
 
     // Generar planeta
     //Los atributos de SphereGeometry son scale, (algo que ver con ser esfera), (algo que ver con ser esfera)
@@ -319,7 +327,7 @@ function createSpecificObjectPlanet(planet){
         for (let index = 0; index < planet.moons.length; index++) {
 
             // Cargar textura
-            var moonTexture = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("images/"+planet.moons[index].name+"map.jpg")});
+            var moonTexture = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("images/"+planet.moons[index].name+"map.jpg"), bumpMap: new THREE.TextureLoader().load("images/"+planet.moons[index].name+"bump.jpg"), bumpScale:0.5});
 
             // Generar la luna
             var newMoon = new THREE.Mesh(new THREE.SphereGeometry(planet.moons[index].scale, 20, 20), moonTexture);
@@ -360,7 +368,7 @@ function createSun(sun){
     // Cargar textura
     //var sunTexture = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("images/"+sun.name+"map.jpg"), emissive: "yellow", emissivemap:"images/"+sun.name+"map.jpg", emissiveIntensity:5});
 
-    var sunTexture = new THREE.MeshBasicMaterial({map: new THREE.TextureLoader().load("images/"+sun.name+"map.jpg")});
+    var sunTexture = new THREE.MeshBasicMaterial({map: new THREE.TextureLoader().load("images/"+sun.name+"map.jpg"), bumpMap: new THREE.TextureLoader().load("images/"+sun.name+"bump.jpg"), bumpScale:1});
 
     // Generar sol
     var newSun = new THREE.Mesh(new THREE.SphereGeometry(sun.scale, 20, 20), sunTexture);
