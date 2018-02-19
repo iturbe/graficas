@@ -15,8 +15,8 @@
         ○ Pueden encontrar varias texturas en: http://planetpixelemporium.com/mars.html
     ● DONE: El sol es el emisor de la luz: Investigar el uso de point lights en ThreeJs.
     ● DONE: Controlar la rotación y escala de la escena.
-    ● TODO: Texturas, cantidad y posicionamiento de lunas
-    ● TODO: Que las lunas se puedan randomizar sin encimarse
+    ● DONE: Texturas, cantidad y posicionamiento de lunas
+    ● DONE: Que las lunas se puedan randomizar sin encimarse
     ● DONE: arreglar la luz del sol
 */
 
@@ -32,41 +32,11 @@ var currentTime = Date.now();
 // PLANETS & MOONS
 // Planets
 var sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune, pluto;
-var asteroidBelt;
 
 // Sol que generaremos a partir de la función createSun
 var newSun;
 
-sun = {
-    name:"sun",
-    scale:3.5,
-    distance: 0,
-    orbitSpeed:1,
-    rotationSpeed:1,
-    orbits : [],
-    planets : []
-}
-
-mercury = {
-    name:"mercury",
-    scale:0.4,
-    distance: 5,
-    orbitSpeed:9,
-    rotationSpeed:5,
-    rings:0,
-    moons : []
-}
-
-venus = {
-    name:"venus",
-    scale:1,
-    distance: 10,
-    orbitSpeed:8,
-    rotationSpeed:1,
-    rings:0,
-    moons : []
-}
-
+// GENERIC ASTEROID
 var asteroid = {
     name:"moon",
     scale:0.3,
@@ -78,6 +48,40 @@ var asteroid = {
     rotationSpeed:5,
 }
 
+// SUN
+sun = {
+    name:"sun",
+    scale:3.5,
+    distance: 0,
+    orbitSpeed:1,
+    rotationSpeed:1,
+    orbits : [],
+    planets : []
+}
+
+// MERCURY
+mercury = {
+    name:"mercury",
+    scale:0.4,
+    distance: 5,
+    orbitSpeed:9,
+    rotationSpeed:5,
+    rings:0,
+    moons : []
+}
+
+// VENUS
+venus = {
+    name:"venus",
+    scale:1,
+    distance: 10,
+    orbitSpeed:8,
+    rotationSpeed:1,
+    rings:0,
+    moons : []
+}
+
+// EARTH & MOON
 earth = {
     name:"earth",
     scale:1,
@@ -86,12 +90,20 @@ earth = {
     rotationSpeed:1,
     hasMoons:true,
     rings:0,
-    moons : [asteroid]
+    moons : [moon = {
+        name:"moon",
+        scale:0.3,
+        distance: 1,
+        xdistance: 1,
+        ydistance: 1,
+        zdistance: 1,
+        orbitSpeed:1,
+        rotationSpeed:5,
+    }]
 }
 
 // MARS & MOONS
 var phobos, deimos;
-
 mars = {
     name:"mars",
     scale:0.5,
@@ -100,10 +112,29 @@ mars = {
     rotationSpeed:6,
     rings:0,
     hasMoons: true,
-    moons : [asteroid, asteroid]
+    moons : [phobos = {
+        name:"moon",
+        scale:0.3,
+        distance: 1,
+        xdistance: 1,
+        ydistance: 1,
+        zdistance: 1,
+        orbitSpeed:1,
+        rotationSpeed:5,
+    }, deimos = {
+        name:"moon",
+        scale:0.3,
+        distance: 1,
+        xdistance: 1,
+        ydistance: 1,
+        zdistance: 1,
+        orbitSpeed:1,
+        rotationSpeed:5,
+    }]
 }
 
 // JUPITER & MOONS
+var io, europa, ganymede, callisto;
 jupiter = {
     name:"jupiter",
     scale:2.5,
@@ -112,9 +143,47 @@ jupiter = {
     rotationSpeed:1,
     rings:0.0,
     hasMoons: true,
-    moons : [asteroid, asteroid, asteroid, asteroid]
+    moons : [io = {
+        name:"moon",
+        scale:0.3,
+        distance: 1,
+        xdistance: 1,
+        ydistance: 1,
+        zdistance: 1,
+        orbitSpeed:1,
+        rotationSpeed:5,
+    }, europa = {
+        name:"moon",
+        scale:0.3,
+        distance: 1,
+        xdistance: 1,
+        ydistance: 1,
+        zdistance: 1,
+        orbitSpeed:1,
+        rotationSpeed:5,
+    }, ganymede = {
+        name:"moon",
+        scale:0.3,
+        distance: 1,
+        xdistance: 1,
+        ydistance: 1,
+        zdistance: 1,
+        orbitSpeed:1,
+        rotationSpeed:5,
+    }, callisto = {
+        name:"moon",
+        scale:0.3,
+        distance: 1,
+        xdistance: 1,
+        ydistance: 1,
+        zdistance: 1,
+        orbitSpeed:1,
+        rotationSpeed:5,
+    }]
 }
 
+// SATURN & MOONS
+var titan, enceladus, iapetus, mimas, hyperion;
 saturn = {
     name:"saturn",
     scale:1.5,
@@ -123,9 +192,56 @@ saturn = {
     rotationSpeed:1,
     rings:1,
     hasMoons: true,
-    moons : [asteroid, asteroid, asteroid, asteroid, asteroid]
+    moons : [titan = {
+        name:"moon",
+        scale:0.3,
+        distance: 1,
+        xdistance: 1,
+        ydistance: 1,
+        zdistance: 1,
+        orbitSpeed:1,
+        rotationSpeed:5,
+    }, enceladus = {
+        name:"moon",
+        scale:0.3,
+        distance: 1,
+        xdistance: 1,
+        ydistance: 1,
+        zdistance: 1,
+        orbitSpeed:1,
+        rotationSpeed:5,
+    }, iapetus = {
+        name:"moon",
+        scale:0.3,
+        distance: 1,
+        xdistance: 1,
+        ydistance: 1,
+        zdistance: 1,
+        orbitSpeed:1,
+        rotationSpeed:5,
+    }, mimas = {
+        name:"moon",
+        scale:0.3,
+        distance: 1,
+        xdistance: 1,
+        ydistance: 1,
+        zdistance: 1,
+        orbitSpeed:1,
+        rotationSpeed:5,
+    }, hyperion = {
+        name:"moon",
+        scale:0.3,
+        distance: 1,
+        xdistance: 1,
+        ydistance: 1,
+        zdistance: 1,
+        orbitSpeed:1,
+        rotationSpeed:5,
+    }]
 }
 
+// URANUS & MOON
+var miranda;
 uranus = {
     name:"uranus",
     scale:1.5,
@@ -134,9 +250,20 @@ uranus = {
     rotationSpeed:1,
     rings:0.05,
     hasMoons: true,
-    moons : [asteroid]
+    moons : [miranda = {
+        name:"moon",
+        scale:0.3,
+        distance: 1,
+        xdistance: 1,
+        ydistance: 1,
+        zdistance: 1,
+        orbitSpeed:1,
+        rotationSpeed:5,
+    }]
 }
 
+// NEPTUNE & MOON
+var triton;
 neptune = {
     name:"neptune",
     scale:1.5,
@@ -145,9 +272,19 @@ neptune = {
     rotationSpeed:1,
     rings:0.05,
     hasMoons: true,
-    moons : [asteroid]
+    moons : [triton = {
+        name:"moon",
+        scale:0.3,
+        distance: 1,
+        xdistance: 1,
+        ydistance: 1,
+        zdistance: 1,
+        orbitSpeed:1,
+        rotationSpeed:5,
+    }]
 }
 
+// PLUTO
 pluto = {
     name:"pluto",
     scale:0.5,
@@ -158,33 +295,16 @@ pluto = {
     moons : []
 }
 
+// Variable para guardar el cinturón de asteroides normal
 var asteroidBelt;
 
 // Arreglo de planetas para fácil manejo
 var planets;
 
-// Sun planets
-var sunGroup;
-
-// Mars Moons
-var marsGroup;
-
-// Jupiter Moons
-var jupiterGroup;
-var io, europa, ganymede, callisto;
-
-// Saturn Moons
-var titan, enceladus, iapetus, mimas, hyperion;
-
-// Uranus Moons
-var miranda;
-
-// Neptune Moons
-var triton;
-
 // Variable auxiliar para almacenar los planetas
 var planetGroup;
 
+// Variable para guardar el cinturón de asteroides de .objs
 var objAsteroidBelt;
 
 // Función para generar las animaciones
@@ -226,7 +346,6 @@ function animate(){
             }
         }
     }
-    
 }
 
 function run() {
@@ -356,10 +475,11 @@ function createSpecificObjectPlanet(planet){
 
     // Crear anillos
     if (planet.rings > 0) {
-        // Crear orbita de lunas
+        
+        // Crear contenedor de anillos
         var ringContainer = new THREE.Group();
 
-        // Asignar orbita de lunas al planeta
+        // Asignar contenedor al planeta
         newPlanet.add(ringContainer);
 
         // Hacer anillos
@@ -384,6 +504,8 @@ function createSpecificObjectPlanet(planet){
         // Asignar orbita de lunas al planeta
         newPlanet.add(moonOrbit);
 
+        var angle = 0;
+
         // Iterar para crear todas las lunas necesarias
         for (let index = 0; index < planet.moons.length; index++) {
 
@@ -392,15 +514,10 @@ function createSpecificObjectPlanet(planet){
 
             // Generar la luna
             var newMoon = new THREE.Mesh(new THREE.SphereGeometry(planet.moons[index].scale, 20, 20), moonTexture);
-
-            var xPosition = planet.scale + Math.random();
-            var yPosition = Math.random();
-            var zPosition = Math.random();
-
-            console.log(xPosition + " " + yPosition + " " + zPosition);
             
             // Establecer posición
-            newMoon.position.set(xPosition, yPosition, zPosition);
+            angle = (360/planet.moons.length) * (Math.PI/180) * index;
+            newMoon.position.set(Math.cos(angle) * (planet.scale+0.5), 0, Math.sin(angle) * (planet.scale+0.5));
 
             // Asignar lunas a la órbita
             moonOrbit.add(newMoon);
