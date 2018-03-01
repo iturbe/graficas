@@ -14,15 +14,21 @@ var howManyCubes = 15;
 
 var cubeArray = [];
 var gameArray = [];
-var userAnswers = [];
+//var userAnswers = [];
 
 var xSpacing = 140;
 var ySpacing = -200;
 
 var timeoutAmount = 1000;
 
-function createScene(canvas) 
-{
+// puntaje confirmado del usuario
+var currentScore = 0;
+
+// puntaje temporal, reseteado cada turno
+var tempScore = 0;
+
+
+function createScene(canvas) {
     renderer = new THREE.WebGLRenderer( { canvas: canvas, antialias: true } );
 
     // Set the viewport size
@@ -112,7 +118,7 @@ function onWindowResize(){
     // yMax = window.innerHeight;
 }
 
-// Cachar evento de movimiento de mouse
+// Cachar evento de movimiento de mouse -> se usa para highlightear las selecciones
 function onDocumentMouseMove(event){
     
     // Prevenir que el manejador de eventos utilice el evento default
@@ -163,9 +169,48 @@ function onDocumentMouseMove(event){
     }
 }
 
+// Cachar evento de click de mouse <- esta debe de ser la función principal
 function onDocumentMouseDown(event){
+
+    console.log("user clicked, cs: " + currentScore + ", ts: " + tempScore);
+    
+    // Prevenir que el manejador de eventos utilice el evento default
     event.preventDefault();
 
+    // primero, checar si se hizo click sobre un cubo
+    if (INTERSECTED != null) {
+        
+        // sí se hizo click en un cubo, continuar...
+
+        // checar si hizo click en EL cubo que tenía que hacer click en este momento
+        if (INTERSECTED == cubeArray[gameArray[tempScore]]) { 
+                
+            // incrementar puntaje
+            tempScore++;
+            console.log("tempscore increased to", tempScore);
+
+            // checar si ya completó todos los que se tenían que clickear hasta el momento
+            if (tempScore > currentScore) {
+                
+                // incrementar currentScore
+                currentScore++;
+                console.log("currentscore increased to", tempScore);
+
+                // enseñar la nueva animación
+                //spinCurrent(currentScore);
+                lightEmUp();
+
+                // resetear temp score
+                tempScore = 0;
+                console.log("tempscore reset to", tempScore);
+
+            } // todavía no llega a todos los que se tenían que clickear
+
+        } else {
+            window.alert("You lost!");
+            tempScore = 0;
+        }
+    }
 }
 
 // Boilerplate
@@ -182,6 +227,7 @@ function render(){
     renderer.render( scene, camera );
 }
 
+// Setup de elementos del juego
 function gameSetup() {
     
     // // Llenar arreglo de juego
@@ -192,10 +238,9 @@ function gameSetup() {
     }
 
     console.log(gameArray);
-
-    //console.log("hello!");
 }
 
+// DEPRECATED
 function play(iteration) {
     for (let index = 0; index < iteration; index++) {
         // iluminar cada cubito después de cierto timeout
@@ -206,29 +251,57 @@ function play(iteration) {
     }
 }
 
-var counter = 0;
-function proxyFunction() {
-    if (counter < 10) {
-        cubeArray[gameArray[counter]].position.z = cubeArray[gameArray[counter]].position.z - 20;
-        
-        // Setup de la animación al cubo
-        initAnimations(cubeArray[gameArray[counter]]);
+// iluminar el primer cubo para que el jugador sepa que onda
+function firstTurn(){
+    
+    setTimeout(function(){
+        // Preparar el cubo
+        initAnimations(cubeArray[gameArray[0]]);
 
-        // Animar
+        // Iluminar
         playAnimations();
+    }, timeoutAmount);
+
+}
+
+var counter = 0;
+function proxyFunction(score) {
+
+    while (counter <= score) {
+        
+        // Mover hacia atrás
+        //cubeArray[gameArray[counter]].position.z = cubeArray[gameArray[counter]].position.z - 20;
+        
+
+        spinCube(cubeArray[gameArray[counter]])
 
         // Incrementar contador
         counter++;
     }
+
+    counter = 0;
 }
 
-function moveBack() {
-    setInterval(proxyFunction, timeoutAmount);
+var x = 0;
+// girar todos los cubos hasta el current score
+function spinCurrent(score) {
+    setInterval(proxyFunction(score), timeoutAmount);
+
+    
+    // var intervalID = setInterval(function () {
+    //     spinCube(cubeArray[gameArray[x]]);
+        
+    //     if (++x === score) {
+    //         window.clearInterval(intervalID);
+    //         x = 0;
+    //     }
+    // }, timeoutAmount);
 }
 
+// hace setup para la animación del cubo
 function initAnimations(targetCube){
 
-    console.log(targetCube);
+    //console.log(targetCube);
     
     // generar el animador
     animator = new KF.KeyFrameAnimator;
@@ -279,7 +352,42 @@ function initAnimations(targetCube){
     });
 }
 
+// efectúa la animación en sí del cubo
 function playAnimations(){
     //console.log(cube);
     animator.start();
+}
+
+// gira el cubo especificado
+function spinCube(targetCube){
+    initAnimations(targetCube);
+    playAnimations(targetCube);
+}
+
+
+var counter = 0;
+function myProxyFunction() {
+    if (counter <= currentScore) {
+        //cubeArray[gameArray[counter]].position.z = cubeArray[gameArray[counter]].position.z - 20;
+        
+        spinCube(cubeArray[gameArray[counter]]);
+
+        // Incrementar contador
+        counter++;
+    }
+}
+
+function lightEmUp() {
+    counter = 0;
+    //setInterval(myProxyFunction, timeoutAmount);
+
+    var intervalID = setInterval(function () {
+        
+        spinCube(cubeArray[gameArray[x]]);
+        
+        if (++x === currentScore+1) {
+            window.clearInterval(intervalID);
+            x = 0;
+        }
+    }, timeoutAmount + (x*timeoutAmount));
 }
