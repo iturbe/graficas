@@ -172,6 +172,9 @@ function onDocumentMouseDown(event){
 function run(){
     requestAnimationFrame( run );
     render();
+
+    // Actualizar animaciones de cubitos
+    KF.update();
 }
 
 // Bolierplate
@@ -207,10 +210,76 @@ var counter = 0;
 function proxyFunction() {
     if (counter < 10) {
         cubeArray[gameArray[counter]].position.z = cubeArray[gameArray[counter]].position.z - 20;
+        
+        // Setup de la animación al cubo
+        initAnimations(cubeArray[gameArray[counter]]);
+
+        // Animar
+        playAnimations();
+
+        // Incrementar contador
         counter++;
     }
 }
 
 function moveBack() {
     setInterval(proxyFunction, timeoutAmount);
+}
+
+function initAnimations(targetCube){
+
+    console.log(targetCube);
+    
+    // generar el animador
+    animator = new KF.KeyFrameAnimator;
+
+    var radius = 5; // radio del círculo sobre el cual queremos que se mueva el monstruo
+    var slices = 360; // cuántas subdivisiones se harán
+    var positionsArray = [];
+    var rotationArray = [];
+    var temp = "";
+    var keyArray = []
+    var angle = 0;
+    var duration = 0.5; // medio segundo de rotación
+    
+    // Generar valores de círculo
+    for (var a = 0; a <= slices; a++) {
+        
+        // cada posición se calcula basado en el ángulo subsecuente del círculo unitario
+        angle = ((2 * Math.PI)/slices) * a;
+
+        // Generar un string con los valores
+        temp = "{\"x\":" + Math.cos(angle)*radius + ",\"y\":0,\"z\":" + Math.sin(angle)*radius + '}';
+        
+        // parsear y meter al arreglo
+        positionsArray.push(JSON.parse(temp))
+        
+        // generar valor de la llave y meterla al arreglo también
+        keyArray.push(a/slices);
+
+        // Generar string con el valor
+        temp = "{\"y\":" + angle + '}';
+
+        // obtener ángulo de rotación y meterlo al arreglo de ángulos
+        rotationArray.push(JSON.parse(temp));
+    }
+
+    animator.init({ 
+        interps:
+            [
+                { 
+                    keys:keyArray, 
+                    values:rotationArray,
+                    target:targetCube.rotation
+                },
+            ],
+        loop: false,
+        duration:duration * 1000,
+        easing:TWEEN.Easing.Linear.None,
+    });
+}
+
+function playAnimations(){
+    //console.log(cube);
+    animator.start();
 }
