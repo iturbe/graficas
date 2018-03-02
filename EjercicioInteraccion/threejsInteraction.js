@@ -200,6 +200,7 @@ function onDocumentMouseDown(event){
                 // incrementar currentScore
                 currentScore++;
                 console.log("currentscore increased to" + tempScore);
+                document.getElementById("displayScore").innerHTML = "Current score: " + currentScore;
 
                 // girarle los siguientes cubos al usuario
                 spinEm();
@@ -213,6 +214,7 @@ function onDocumentMouseDown(event){
         } else {
             window.alert("You lost! Score: " + currentScore);
             tempScore = 0;
+            location.reload();
         }
     }
 }
@@ -244,17 +246,6 @@ function gameSetup() {
     console.log(gameArray);
 }
 
-// DEPRECATED
-function play(iteration) {
-    for (let index = 0; index < iteration; index++) {
-        // iluminar cada cubito después de cierto timeout
-        setTimeout(function(){
-            cubeArray[gameArray[index]].material.emissive.setHex( 0xff0000 );
-            }, timeoutAmount);
-        
-    }
-}
-
 // iluminar el primer cubo para que el jugador sepa que onda
 function firstTurn(){
     
@@ -264,98 +255,6 @@ function firstTurn(){
         
     }, timeoutAmount);
 
-}
-
-// hace setup para la animación de girar el cubo
-function spinAnimation(targetCube){
-
-    //console.log(targetCube);
-    
-    // generar el animador
-    animator = new KF.KeyFrameAnimator;
-
-    var radius = 5; // radio del círculo sobre el cual queremos que se mueva el monstruo
-    var slices = 360; // cuántas subdivisiones se harán
-    var positionsArray = [];
-    var rotationArray = [];
-    var temp = "";
-    var keyArray = []
-    var angle = 0;
-    var duration = 0.5; // medio segundo de rotación
-    
-    // Generar valores de círculo
-    for (var a = 0; a <= slices; a++) {
-        
-        // cada posición se calcula basado en el ángulo subsecuente del círculo unitario
-        angle = ((2 * Math.PI)/slices) * a;
-
-        // Generar un string con los valores
-        temp = "{\"x\":" + Math.cos(angle)*radius + ",\"y\":0,\"z\":" + Math.sin(angle)*radius + '}';
-        
-        // parsear y meter al arreglo
-        positionsArray.push(JSON.parse(temp))
-        
-        // generar valor de la llave y meterla al arreglo también
-        keyArray.push(a/slices);
-
-        // Generar string con el valor
-        temp = "{\"y\":" + angle + '}';
-
-        // obtener ángulo de rotación y meterlo al arreglo de ángulos
-        rotationArray.push(JSON.parse(temp));
-    }
-
-    animator.init({ 
-        interps:
-            [
-                { 
-                    keys:keyArray, 
-                    values:rotationArray,
-                    target:targetCube.rotation
-                },
-            ],
-        loop: false,
-        duration:duration * 1000,
-        easing:TWEEN.Easing.Linear.None,
-    });
-}
-
-// hace setup para la animación de mover el cubo
-function resizeAnimation(targetCube){
-
-    console.log(targetCube.position);
-    
-    // generar el animador
-    animator = new KF.KeyFrameAnimator;
-
-    var duration = 0.5; // medio segundo de rotación
-
-    // z-value de la posición es el que hay que modificar
-    var currentPosition = targetCube.position;
-
-    var myValues = []
-
-    myValues.push({x:currentPosition.x, y:currentPosition.y, z:-200});
-    myValues.push({x:currentPosition.x, y:currentPosition.y, z:-190});
-    myValues.push({x:currentPosition.x, y:currentPosition.y, z:-180});
-    myValues.push({x:currentPosition.x, y:currentPosition.y, z:-190});
-    myValues.push({x:currentPosition.x, y:currentPosition.y, z:-200});
-
-    console.log(myValues);
-
-    animator.init({ 
-        interps:
-            [
-                { 
-                    keys:[0, 0.25, 0.5, 0.75, 1], 
-                    values:myValues,
-                    target:targetCube.position
-                },
-            ],
-        loop: false,
-        duration:duration * 1000,
-        easing:TWEEN.Easing.Elastic.InOut,
-    });
 }
 
 // hace setup para la animación de girar el cubo
