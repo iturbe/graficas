@@ -14,7 +14,6 @@ var howManyCubes = 15;
 
 var cubeArray = [];
 var gameArray = [];
-//var userAnswers = [];
 
 var xSpacing = 140;
 var ySpacing = -200;
@@ -27,7 +26,11 @@ var currentScore = 0;
 // puntaje temporal, reseteado cada turno
 var tempScore = 0;
 
+// contador para llevar control de cuantos cube spins llevamos
+var counter = 0;
+var x = 0;
 
+// Setup
 function createScene(canvas) {
     renderer = new THREE.WebGLRenderer( { canvas: canvas, antialias: true } );
 
@@ -106,6 +109,7 @@ function createScene(canvas) {
     window.addEventListener( 'resize', onWindowResize);
 }
 
+// Boilerplate
 function onWindowResize(){
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
@@ -169,7 +173,7 @@ function onDocumentMouseMove(event){
     }
 }
 
-// Cachar evento de click de mouse <- esta debe de ser la función principal
+// Cachar evento de click de mouse
 function onDocumentMouseDown(event){
 
     console.log("user clicked, cs: " + currentScore + ", ts: " + tempScore);
@@ -180,34 +184,34 @@ function onDocumentMouseDown(event){
     // primero, checar si se hizo click sobre un cubo
     if (INTERSECTED != null) {
         
-        // sí se hizo click en un cubo, continuar...
+        // animar el cubo clickeado
+        spinCubeNegative(INTERSECTED);
 
         // checar si hizo click en EL cubo que tenía que hacer click en este momento
         if (INTERSECTED == cubeArray[gameArray[tempScore]]) { 
                 
             // incrementar puntaje
             tempScore++;
-            console.log("tempscore increased to", tempScore);
+            console.log("tempscore increased to" + tempScore);
 
             // checar si ya completó todos los que se tenían que clickear hasta el momento
             if (tempScore > currentScore) {
                 
                 // incrementar currentScore
                 currentScore++;
-                console.log("currentscore increased to", tempScore);
+                console.log("currentscore increased to" + tempScore);
 
-                // enseñar la nueva animación
-                //spinCurrent(currentScore);
-                lightEmUp();
+                // girarle los siguientes cubos al usuario
+                spinEm();
 
                 // resetear temp score
                 tempScore = 0;
-                console.log("tempscore reset to", tempScore);
+                console.log("tempscore reset to" + tempScore);
 
             } // todavía no llega a todos los que se tenían que clickear
 
         } else {
-            window.alert("You lost!");
+            window.alert("You lost! Score: " + currentScore);
             tempScore = 0;
         }
     }
@@ -255,51 +259,15 @@ function play(iteration) {
 function firstTurn(){
     
     setTimeout(function(){
-        // Preparar el cubo
-        initAnimations(cubeArray[gameArray[0]]);
 
-        // Iluminar
-        playAnimations();
+        spinCubePositive(cubeArray[gameArray[0]]);
+        
     }, timeoutAmount);
 
 }
 
-var counter = 0;
-function proxyFunction(score) {
-
-    while (counter <= score) {
-        
-        // Mover hacia atrás
-        //cubeArray[gameArray[counter]].position.z = cubeArray[gameArray[counter]].position.z - 20;
-        
-
-        spinCube(cubeArray[gameArray[counter]])
-
-        // Incrementar contador
-        counter++;
-    }
-
-    counter = 0;
-}
-
-var x = 0;
-// girar todos los cubos hasta el current score
-function spinCurrent(score) {
-    setInterval(proxyFunction(score), timeoutAmount);
-
-    
-    // var intervalID = setInterval(function () {
-    //     spinCube(cubeArray[gameArray[x]]);
-        
-    //     if (++x === score) {
-    //         window.clearInterval(intervalID);
-    //         x = 0;
-    //     }
-    // }, timeoutAmount);
-}
-
-// hace setup para la animación del cubo
-function initAnimations(targetCube){
+// hace setup para la animación de girar el cubo
+function spinAnimation(targetCube){
 
     //console.log(targetCube);
     
@@ -352,42 +320,220 @@ function initAnimations(targetCube){
     });
 }
 
+// hace setup para la animación de mover el cubo
+function resizeAnimation(targetCube){
+
+    console.log(targetCube.position);
+    
+    // generar el animador
+    animator = new KF.KeyFrameAnimator;
+
+    var duration = 0.5; // medio segundo de rotación
+
+    // z-value de la posición es el que hay que modificar
+    var currentPosition = targetCube.position;
+
+    var myValues = []
+
+    myValues.push({x:currentPosition.x, y:currentPosition.y, z:-200});
+    myValues.push({x:currentPosition.x, y:currentPosition.y, z:-190});
+    myValues.push({x:currentPosition.x, y:currentPosition.y, z:-180});
+    myValues.push({x:currentPosition.x, y:currentPosition.y, z:-190});
+    myValues.push({x:currentPosition.x, y:currentPosition.y, z:-200});
+
+    console.log(myValues);
+
+    animator.init({ 
+        interps:
+            [
+                { 
+                    keys:[0, 0.25, 0.5, 0.75, 1], 
+                    values:myValues,
+                    target:targetCube.position
+                },
+            ],
+        loop: false,
+        duration:duration * 1000,
+        easing:TWEEN.Easing.Elastic.InOut,
+    });
+}
+
+// hace setup para la animación de girar el cubo
+function spinResizeAnimationPositive(targetCube){
+
+    //console.log(targetCube);
+    
+    // generar el animador
+    animator = new KF.KeyFrameAnimator;
+
+    var radius = 5; // radio del círculo sobre el cual queremos que se mueva el monstruo
+    var slices = 360; // cuántas subdivisiones se harán
+    var positionsArray = [];
+    var rotationArray = [];
+    var temp = "";
+    var keyArray = []
+    var angle = 0;
+    var duration = 0.5; // un segundo de animación
+    
+    // Generar valores de círculo
+    for (var a = 0; a <= slices; a++) {
+        
+        // cada posición se calcula basado en el ángulo subsecuente del círculo unitario
+        angle = ((2 * Math.PI)/slices) * a;
+
+        // Generar un string con los valores
+        temp = "{\"x\":" + Math.cos(angle)*radius + ",\"y\":0,\"z\":" + Math.sin(angle)*radius + '}';
+        
+        // parsear y meter al arreglo
+        positionsArray.push(JSON.parse(temp))
+        
+        // generar valor de la llave y meterla al arreglo también
+        keyArray.push(a/slices);
+
+        // Generar string con el valor
+        temp = "{\"y\":" + angle + '}';
+
+        // obtener ángulo de rotación y meterlo al arreglo de ángulos
+        rotationArray.push(JSON.parse(temp));
+    }
+
+    // z-value de la posición es el que hay que modificar
+    var currentPosition = targetCube.position;
+
+    var myValues = []
+
+    myValues.push({x:currentPosition.x, y:currentPosition.y, z:-200});
+    myValues.push({x:currentPosition.x, y:currentPosition.y, z:-190});
+    myValues.push({x:currentPosition.x, y:currentPosition.y, z:-180});
+    myValues.push({x:currentPosition.x, y:currentPosition.y, z:-190});
+    myValues.push({x:currentPosition.x, y:currentPosition.y, z:-200});
+
+    animator.init({ 
+        interps:
+            [
+                { 
+                    keys:keyArray, 
+                    values:rotationArray,
+                    target:targetCube.rotation
+                },
+                { 
+                    keys:[0, 0.25, 0.5, 0.75, 1], 
+                    values:myValues,
+                    target:targetCube.position
+                },
+            ],
+        loop: false,
+        duration:duration * 1000,
+        easing:TWEEN.Easing.Linear.None,
+    });
+}
+
+// hace setup para la animación de girar el cubo
+function spinResizeAnimationNegative(targetCube){
+
+    //console.log(targetCube);
+    
+    // generar el animador
+    animator = new KF.KeyFrameAnimator;
+
+    var radius = 5; // radio del círculo sobre el cual queremos que se mueva el monstruo
+    var slices = 360; // cuántas subdivisiones se harán
+    var positionsArray = [];
+    var rotationArray = [];
+    var temp = "";
+    var keyArray = []
+    var angle = 0;
+    var duration = 0.5; // un segundo de animación
+    
+    // Generar valores de círculo
+    for (var a = 0; a <= slices; a++) {
+        
+        // cada posición se calcula basado en el ángulo subsecuente del círculo unitario
+        angle = ((2 * Math.PI)/slices) * a;
+
+        // Generar un string con los valores
+        temp = "{\"x\":" + Math.cos(angle)*radius + ",\"y\":0,\"z\":" + Math.sin(angle)*radius + '}';
+        
+        // parsear y meter al arreglo
+        positionsArray.push(JSON.parse(temp))
+        
+        // generar valor de la llave y meterla al arreglo también
+        keyArray.push(a/slices);
+
+        // Generar string con el valor
+        temp = "{\"y\":" + angle + '}';
+
+        // obtener ángulo de rotación y meterlo al arreglo de ángulos
+        rotationArray.push(JSON.parse(temp));
+    }
+
+    // z-value de la posición es el que hay que modificar
+    var currentPosition = targetCube.position;
+
+    var myValues = []
+
+    myValues.push({x:currentPosition.x, y:currentPosition.y, z:-200});
+    myValues.push({x:currentPosition.x, y:currentPosition.y, z:-210});
+    myValues.push({x:currentPosition.x, y:currentPosition.y, z:-220});
+    myValues.push({x:currentPosition.x, y:currentPosition.y, z:-210});
+    myValues.push({x:currentPosition.x, y:currentPosition.y, z:-200});
+
+    animator.init({ 
+        interps:
+            [
+                { 
+                    keys:keyArray, 
+                    values:rotationArray,
+                    target:targetCube.rotation
+                },
+                { 
+                    keys:[0, 0.25, 0.5, 0.75, 1], 
+                    values:myValues,
+                    target:targetCube.position
+                },
+            ],
+        loop: false,
+        duration:duration * 1000,
+        easing:TWEEN.Easing.Linear.None,
+    });
+}
+
 // efectúa la animación en sí del cubo
 function playAnimations(){
     //console.log(cube);
     animator.start();
 }
 
-// gira el cubo especificado
-function spinCube(targetCube){
-    initAnimations(targetCube);
+// gira el cubo especificado hacia el usuario
+function spinCubePositive(targetCube){
+    // spinAnimation(targetCube);
+    // resizeAnimation(targetCube);
+    spinResizeAnimationPositive(targetCube);
     playAnimations(targetCube);
 }
 
-
-var counter = 0;
-function myProxyFunction() {
-    if (counter <= currentScore) {
-        //cubeArray[gameArray[counter]].position.z = cubeArray[gameArray[counter]].position.z - 20;
-        
-        spinCube(cubeArray[gameArray[counter]]);
-
-        // Incrementar contador
-        counter++;
-    }
+// gira el cubo especificado NO hacia el usuario (es para cuando hace click)
+function spinCubeNegative(targetCube){
+    // spinAnimation(targetCube);
+    // resizeAnimation(targetCube);
+    spinResizeAnimationNegative(targetCube);
+    playAnimations(targetCube);
 }
 
-function lightEmUp() {
+// recorre gameArray, girando cada cubo para que el usuario vea la secuencia
+function spinEm() {
+    
+    // reset
     counter = 0;
-    //setInterval(myProxyFunction, timeoutAmount);
 
     var intervalID = setInterval(function () {
         
-        spinCube(cubeArray[gameArray[x]]);
+        // girar cubo específico
+        spinCubePositive(cubeArray[gameArray[x]]);
         
-        if (++x === currentScore+1) {
-            window.clearInterval(intervalID);
-            x = 0;
+        if (++x === currentScore+1) { 
+            window.clearInterval(intervalID); // detener iteración
+            x = 0; // resetear
         }
-    }, timeoutAmount + (x*timeoutAmount));
+    }, timeoutAmount + (x*timeoutAmount)); // incrementar el timeout amount para que no se overlapeen las animaciones
 }
