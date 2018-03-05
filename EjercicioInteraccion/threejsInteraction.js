@@ -202,6 +202,14 @@ function onDocumentMouseDown(event){
                 console.log("currentscore increased to" + tempScore);
                 document.getElementById("displayScore").innerHTML = "Current score: " + currentScore;
 
+                // checar éxito
+                if (currentScore == 10) {
+                    // el usuario ha ganado
+                    window.alert("Congratulations! You won!");
+                    tempScore = 0;
+                    location.reload();
+                }
+
                 // girarle los siguientes cubos al usuario
                 spinEm();
 
