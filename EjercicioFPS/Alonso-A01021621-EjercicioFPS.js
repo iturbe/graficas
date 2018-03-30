@@ -8,6 +8,11 @@ var floor;
 
 var blocker,  instructions;
 
+var bullet;
+
+var bulletduration = 0.3; // seconds
+var spinduration = 0.3; // seconds
+
 var controlsEnabled = false;
 
 var moveForward = false;
@@ -227,6 +232,11 @@ function createScene(canvas){
         objects.push( box );
     }
 
+    // crear bala
+    var material = new THREE.MeshBasicMaterial( {color: "red"} );
+    var bulletGeometry = new THREE.SphereGeometry(.5, 32, 32);
+    bullet = new THREE.Mesh( bulletGeometry, material );
+
     // target del mouse
     bullseyeRaycaster = new THREE.Raycaster();
     
@@ -296,11 +306,20 @@ function onDocumentMouseDown(event){
     // Prevenir que el manejador de eventos utilice el evento default
     event.preventDefault();
 
-    // primero, checar si se hizo click sobre un cubo
-    if (INTERSECTED != null) {
+    // checar si se hizo click sobre un cubo y NO el piso
+    if (INTERSECTED != null && INTERSECTED != floor) {
+
+        // si hay un target válido, vamos a disparar
+        shootEnemy(INTERSECTED);
         
-        // animar el cubo clickeado
-        //spinCube(INTERSECTED);
+        // esperar a que la bala viaje (250 ms que dura el disparo)
+        setTimeout(function(){ spinObject(INTERSECTED); }, spinduration*1000);
+
+        //borrar enemigo y bala del mapa, esperando a la bala y la animación de spin
+        setTimeout(function(){
+            scene.remove(bullet);
+            scene.remove(INTERSECTED);
+        }, (spinduration+bulletduration)*1000);
     }
 }
 
@@ -373,8 +392,8 @@ function run() {
     KF.update();
 }
 
-// hace setup para la animación de girar el cubo
-function spinAnimation(targetCube){
+// setup para la animación de girar un objeto
+function spinAnimation(object){
     
     // generar el animador
     animator = new KF.KeyFrameAnimator;
@@ -386,7 +405,6 @@ function spinAnimation(targetCube){
     var temp = "";
     var keyArray = []
     var angle = 0;
-    var duration = 0.5; // un segundo de animación
     
     // Generar valores de círculo
     for (var a = 0; a <= slices; a++) {
@@ -411,7 +429,7 @@ function spinAnimation(targetCube){
     }
 
     // z-value de la posición es el que hay que modificar
-    var currentPosition = targetCube.position;
+    var currentPosition = object.position;
 
     var myValues = []
 
@@ -427,28 +445,82 @@ function spinAnimation(targetCube){
                 { 
                     keys:keyArray, 
                     values:rotationArray,
-                    target:targetCube.rotation
-                }
-                // { 
-                //     keys:[0, 0.25, 0.5, 0.75, 1], 
-                //     values:myValues,
-                //     target:targetCube.position
-                // },
+                    target:object.rotation
+                },
+                // NO FUNCIONA
+                { 
+                    keys:[0, 0.25, 0.5, 0.75, 1], 
+                    values:[1, 0.75, 0.5, 0.25, 0],
+                    target:object.size
+                },
             ],
         loop: false,
-        duration:duration * 1000,
+        duration:spinduration * 1000,
         easing:TWEEN.Easing.Linear.None,
     });
 }
 
-// efectúa la animación en sí del cubo
+// efectúa las animaciones en sí
 function playAnimations(){
     animator.start();
 }
 
-// gira el cubo especificado NO hacia el usuario (es para cuando hace click)
-function spinCube(targetCube){
-    spinAnimation(targetCube);
-    playAnimations(targetCube);
+// proxy para girar el objeto especificado
+function spinObject(object){
+    spinAnimation(object);
+    playAnimations(object);
+}
+
+// proxy para disparar una bala
+function shootEnemy(enemy) {
+    shoot(enemy);
+    playAnimations(enemy);
+}
+
+// setup para la animación de disparar una bala
+function shoot(enemy) {
+    
+    // generar el animador
+    animator = new KF.KeyFrameAnimator;
+
+    // REFERENCE: poner el orígen del ray en donde tu estés (el ray apunta hacia abajo)
+    //raycaster.ray.origin.copy( controls.getObject().position );
+
+    console.log("PLAYER");
+    console.log(controls.getObject().position);
+
+    console.log("ENEMY");
+    console.log(enemy.position);
+
+    // auxiliares para la animación de la bala
+    var positionsArray = [];
+    var keyArray = [0, 1]
+
+    // meter posición actual del jugador
+    positionsArray.push({x:controls.getObject().position.x, y:controls.getObject().position.y, z:controls.getObject().position.z});
+
+    // meter posición del enemigo
+    positionsArray.push({x:enemy.position.x, y:enemy.position.y, z:enemy.position.z});
+
+    console.log(positionsArray);
+
+    bullet.position.x = controls.getObject().position.x;
+    bullet.position.y = controls.getObject().position.y;
+    bullet.position.z = controls.getObject().position.z;
+    scene.add(bullet);
+
+    animator.init({ 
+        interps:
+            [
+                { 
+                    keys:keyArray, 
+                    values:positionsArray,
+                    target:bullet.position
+                }
+            ],
+        loop: false,
+        duration:bulletduration * 1000,
+        easing:TWEEN.Easing.Linear.None,
+    });
 }
 
