@@ -8,7 +8,7 @@ var floor;
 
 var blocker,  instructions;
 
-var bullet;
+var bullet, alienContainer;
 
 var bulletduration = 0.3; // seconds
 var spinduration = 0.3; // seconds
@@ -159,6 +159,7 @@ function onKeyUp( event ) {
     }
 }
 
+// setup inicial
 function createScene(canvas){    
     renderer = new THREE.WebGLRenderer( { canvas: canvas, antialias: true } );
 
@@ -236,12 +237,11 @@ function createScene(canvas){
     var bulletGeometry = new THREE.SphereGeometry(.5, 32, 32);
     bullet = new THREE.Mesh( bulletGeometry, material );
 
-    // crear enemigo
-    // Setup
+    // crear alien
     var manager = new THREE.LoadingManager();
     var loader = new THREE.OBJLoader(manager);
 
-    var cube1 = new THREE.Mesh(
+    alienContainer = new THREE.Mesh(
         new THREE.BoxGeometry(15, 15, 15),
         new THREE.MeshPhongMaterial({
             color: 0xffffff,
@@ -249,23 +249,23 @@ function createScene(canvas){
             opacity: 0.1,
             overdraw: 0.5
         }));
-        cube1.position.set(0, 10, -60);
-        scene.add(cube1);
+        alienContainer.position.set(0, 10, -60);
+        //scene.add(alienContainer);
 
     loader.load("models/space_invader.obj",
     
         // called when resource is loaded
-        function (object) {
+        function (alien) {
 
             // Escalar
-            object.scale.set(0.15, 0.15, 0.15);
+            alien.scale.set(0.15, 0.15, 0.15);
 
-            object.position.set(0, -5, 0);
+            alien.position.set(0, -5, 0);
 
             // Agregarselo al contenedor
-            cube1.add(object);
+            alienContainer.add(alien);
             
-            //objects.push(object);
+            //objects.push(alien);
         },
         
         // called when loading is in progresses
@@ -372,6 +372,15 @@ function onWindowResize() {
 
     renderer.setSize( window.innerWidth, window.innerHeight );
 
+}
+
+// genera un enemigo en un punto aleatorio del mapa y lo acerca al jugador
+function spawnRandomEnemy(){
+    // obtener coordenadas del jugador
+
+    // establecer posición del alien a 5 + rand[0-5] espacios del jugador
+
+    // hacerlo acercarse al jugador con duración 5 segundos
 }
 
 // setup para la animación de girar un objeto
