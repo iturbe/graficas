@@ -203,7 +203,6 @@ function createScene(canvas){
     raycaster = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ), 0, 10 );
 
     // floor
-
     var map = new THREE.TextureLoader().load(floorUrl);
     map.wrapS = map.wrapT = THREE.RepeatWrapping;
     map.repeat.set(8, 8);
@@ -237,6 +236,46 @@ function createScene(canvas){
     var bulletGeometry = new THREE.SphereGeometry(.5, 32, 32);
     bullet = new THREE.Mesh( bulletGeometry, material );
 
+    // crear enemigo
+    // Setup
+    var manager = new THREE.LoadingManager();
+    var loader = new THREE.OBJLoader(manager);
+
+    var cube1 = new THREE.Mesh(
+        new THREE.BoxGeometry(15, 15, 15),
+        new THREE.MeshPhongMaterial({
+            color: 0xffffff,
+            transparent: true,
+            opacity: 0.1,
+            overdraw: 0.5
+        }));
+        cube1.position.set(0, 10, -60);
+        scene.add(cube1);
+
+    loader.load("models/space_invader.obj",
+    
+        // called when resource is loaded
+        function (object) {
+
+            // Escalar
+            object.scale.set(0.15, 0.15, 0.15);
+
+            object.position.set(0, -5, 0);
+
+            // Agregarselo al contenedor
+            cube1.add(object);
+            
+            //objects.push(object);
+        },
+        
+        // called when loading is in progresses
+        function ( xhr ) {console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );},
+        
+        // called when loading has errors
+        function ( error ) {console.log( 'An error happened' );}
+    );
+    
+
     // target del mouse
     bullseyeRaycaster = new THREE.Raycaster();
     
@@ -259,7 +298,9 @@ function onDocumentMouseMove(event){
     bullseyeRaycaster.setFromCamera( mouse, camera );
 
     // obtener intersecciones
-    var intersects = bullseyeRaycaster.intersectObjects( scene.children );
+    var intersects = bullseyeRaycaster.intersectObjects(scene.children);
+
+    console.log(intersects);
 
     // intersects es un arreglo de objetos
 
@@ -333,65 +374,6 @@ function onWindowResize() {
 
 }
 
-function run() {
-    requestAnimationFrame( run );
-
-    if ( controlsEnabled === true ){
-        
-        // poner el orígen del ray en donde tu estés (el ray apunta hacia abajo)
-        raycaster.ray.origin.copy( controls.getObject().position );
-        
-        // ajustar el orígen 
-        raycaster.ray.origin.y -= 10;
-
-        var intersections = raycaster.intersectObjects( objects );
-
-        var onObject = intersections.length > 0;
-
-        var time = performance.now();
-        var delta = ( time - prevTime ) / 1000;
-
-        velocity.x -= velocity.x * 10.0 * delta;
-        velocity.z -= velocity.z * 10.0 * delta;
-        velocity.y -= 9.8 * 100.0 * delta; // 100.0 = mass
-
-        // manera horrible de sacar movimiento
-        direction.z = Number( moveForward ) - Number( moveBackward );
-        direction.x = Number( moveLeft ) - Number( moveRight );
-        direction.normalize(); // this ensures consistent movements in all directions
-
-        if ( moveForward || moveBackward ) velocity.z -= direction.z * 400.0 * delta;
-        if ( moveLeft || moveRight ) velocity.x -= direction.x * 400.0 * delta;
-
-        if ( onObject === true ) 
-        {
-            velocity.y = Math.max( 0, velocity.y );
-            canJump = true;
-        }
-
-        controls.getObject().translateX( velocity.x * delta );
-        controls.getObject().translateY( velocity.y * delta );
-        controls.getObject().translateZ( velocity.z * delta );
-
-        if ( controls.getObject().position.y < 10 ) {
-
-            velocity.y = 0;
-            controls.getObject().position.y = 10;
-
-            canJump = true;
-
-        }
-
-        prevTime = time;
-
-    }
-
-    renderer.render( scene, camera );
-
-    // Actualizar animaciones
-    KF.update();
-}
-
 // setup para la animación de girar un objeto
 function spinAnimation(object){
     
@@ -460,23 +442,6 @@ function spinAnimation(object){
     });
 }
 
-// efectúa las animaciones en sí
-function playAnimations(){
-    animator.start();
-}
-
-// proxy para girar el objeto especificado
-function spinObject(object){
-    spinAnimation(object);
-    playAnimations(object);
-}
-
-// proxy para disparar una bala
-function shootEnemy(enemy) {
-    shoot(enemy);
-    playAnimations(enemy);
-}
-
 // setup para la animación de disparar una bala
 function shoot(enemy) {
     
@@ -523,4 +488,81 @@ function shoot(enemy) {
         easing:TWEEN.Easing.Linear.None,
     });
 }
+
+// efectúa las animaciones en sí
+function playAnimations(){
+    animator.start();
+}
+
+// proxy para girar el objeto especificado
+function spinObject(object){
+    spinAnimation(object);
+    playAnimations(object);
+}
+
+// proxy para disparar una bala
+function shootEnemy(enemy) {
+    shoot(enemy);
+    playAnimations(enemy);
+}
+
+function run() {
+    requestAnimationFrame( run );
+
+    if ( controlsEnabled === true ){
+        
+        // poner el orígen del ray en donde tu estés (el ray apunta hacia abajo)
+        raycaster.ray.origin.copy( controls.getObject().position );
+        
+        // ajustar el orígen 
+        raycaster.ray.origin.y -= 10;
+
+        var intersections = raycaster.intersectObjects( objects );
+
+        var onObject = intersections.length > 0;
+
+        var time = performance.now();
+        var delta = ( time - prevTime ) / 1000;
+
+        velocity.x -= velocity.x * 10.0 * delta;
+        velocity.z -= velocity.z * 10.0 * delta;
+        velocity.y -= 9.8 * 100.0 * delta; // 100.0 = mass
+
+        // manera horrible de sacar movimiento
+        direction.z = Number( moveForward ) - Number( moveBackward );
+        direction.x = Number( moveLeft ) - Number( moveRight );
+        direction.normalize(); // this ensures consistent movements in all directions
+
+        if ( moveForward || moveBackward ) velocity.z -= direction.z * 400.0 * delta;
+        if ( moveLeft || moveRight ) velocity.x -= direction.x * 400.0 * delta;
+
+        if ( onObject === true ) 
+        {
+            velocity.y = Math.max( 0, velocity.y );
+            canJump = true;
+        }
+
+        controls.getObject().translateX( velocity.x * delta );
+        controls.getObject().translateY( velocity.y * delta );
+        controls.getObject().translateZ( velocity.z * delta );
+
+        if ( controls.getObject().position.y < 10 ) {
+
+            velocity.y = 0;
+            controls.getObject().position.y = 10;
+
+            canJump = true;
+
+        }
+
+        prevTime = time;
+
+    }
+
+    renderer.render( scene, camera );
+
+    // Actualizar animaciones
+    KF.update();
+}
+
 
