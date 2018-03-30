@@ -4,14 +4,15 @@ var objects = [];
 
 var raycaster;
 
-var floor;
+var floor, skybox;
 
 var blocker,  instructions;
 
-var bullet, alienContainer;
+var bullet;
 
 var bulletduration = 0.3; // seconds
 var spinduration = 0.3; // seconds
+var alienmovementduration = 5; // seconds
 
 var controlsEnabled = false;
 
@@ -24,8 +25,36 @@ var canJump = false;
 var prevTime = performance.now();
 var velocity, direction;
 
-var floorUrl = "../images/checker_large.gif";
+var floorUrl = "../images/grassMaterial.jpg";
 var cubeUrl = "../images/wooden_crate_texture_by_zackseeker-d38ddsb.png";
+
+// var urlPrefix = "../images/skybox/";
+// var urls = [
+//     urlPrefix + "px.jpg",
+//     urlPrefix + "nx.jpg",
+//     urlPrefix + "py.jpg",
+//     urlPrefix + "ny.jpg",
+//     urlPrefix + "pz.jpg",
+//     urlPrefix + "nz.jpg"];
+// var textureCube = THREE.ImageUtils.loadTextureCube( urls );
+
+// var shader = THREE.ShaderUtils.lib["cube"];
+// var uniforms = THREE.UniformsUtils.clone( shader.uniforms );
+// uniforms['tCube'].texture= textureCube; 
+// var material = new THREE.MeshShaderMaterial({
+//     fragmentShader    : shader.fragmentShader,
+//     vertexShader  : shader.vertexShader,
+//     uniforms  : uniforms
+// });
+
+// // build the skybox Mesh 
+// skyboxMesh = new THREE.Mesh( new THREE.CubeGeometry( 100000, 100000, 100000, 1, 1, 1, null, true ), material );
+// skyboxMesh.doubleSided = true;
+// // add it to the scene
+// scene.addObject( skyboxMesh );
+
+
+//skybox
 
 var mouse = new THREE.Vector2(), INTERSECTED;
 
@@ -177,8 +206,33 @@ function createScene(canvas){
     camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 1000 );
 
     scene = new THREE.Scene();
-    scene.background = new THREE.Color( 0xffffff );
+    //scene.background = new THREE.Color( 0xffffff );
     scene.fog = new THREE.Fog( 0xffffff, 0, 550 );
+
+
+
+    // SKYBOX
+    var imagePrefix = "../images/skybox/";
+    var directions  = ["px", "nx", "py", "ny", "pz", "nz"];
+    var imageSuffix = ".jpg";
+    
+    var materialArray = [];
+    for (var i = 0; i < 6; i++){
+        materialArray.push( new THREE.MeshBasicMaterial({map: new THREE.TextureLoader().load( imagePrefix + directions[i] + imageSuffix), side:THREE.DoubleSide}));
+    }
+
+    var skyGeometry = new THREE.CubeGeometry( 500, 500, 500 );
+    var skyMaterial = new THREE.MeshFaceMaterial( materialArray );
+    skyBox = new THREE.Mesh( skyGeometry, skyMaterial );
+    //skyBox.material.side = THREE.DoubleSide; // hacer que se vea desde adentro
+    //skyBox.rotation.x += Math.PI / 2;
+    //scene.add( skyBox );
+
+
+
+
+
+
 
     // A light source positioned directly above the scene, with color fading from the sky color to the ground color. 
     // HemisphereLight( skyColor, groundColor, intensity )
@@ -219,63 +273,24 @@ function createScene(canvas){
     var cubeMap = new THREE.TextureLoader().load(cubeUrl);
 
     // Generar las cajas
-    for ( var i = 0; i < 500; i ++ ) 
-    {
-        var boxMaterial = new THREE.MeshPhongMaterial( { specular: 0xffffff, flatShading: true, map:cubeMap } );
+    // for ( var i = 0; i < 500; i ++ ) 
+    // {
+    //     var boxMaterial = new THREE.MeshPhongMaterial( { specular: 0xffffff, flatShading: true, map:cubeMap } );
 
-        var box = new THREE.Mesh( boxGeometry, boxMaterial );
-        box.position.x = Math.floor( Math.random() * 20 - 10 ) * 20;
-        box.position.y = Math.floor( Math.random() * 20 ) * 20 + 10;
-        box.position.z = Math.floor( Math.random() * 20 - 10 ) * 20;
+    //     var box = new THREE.Mesh( boxGeometry, boxMaterial );
+    //     box.position.x = Math.floor( Math.random() * 20 - 10 ) * 20;
+    //     box.position.y = Math.floor( Math.random() * 20 ) * 20 + 10;
+    //     box.position.z = Math.floor( Math.random() * 20 - 10 ) * 20;
 
-        scene.add( box );
-        objects.push( box );
-    }
+    //     scene.add( box );
+    //     objects.push( box );
+    // }
 
     // crear bala
     var material = new THREE.MeshBasicMaterial( {color: "red"} );
     var bulletGeometry = new THREE.SphereGeometry(.5, 32, 32);
     bullet = new THREE.Mesh( bulletGeometry, material );
-
-    // crear alien
-    var manager = new THREE.LoadingManager();
-    var loader = new THREE.OBJLoader(manager);
-
-    alienContainer = new THREE.Mesh(
-        new THREE.BoxGeometry(15, 15, 15),
-        new THREE.MeshPhongMaterial({
-            color: 0xffffff,
-            transparent: true,
-            opacity: 0.1,
-            overdraw: 0.5
-        }));
-        alienContainer.position.set(0, 10, -60);
-        //scene.add(alienContainer);
-
-    loader.load("models/space_invader.obj",
     
-        // called when resource is loaded
-        function (alien) {
-
-            // Escalar
-            alien.scale.set(0.15, 0.15, 0.15);
-
-            alien.position.set(0, -5, 0);
-
-            // Agregarselo al contenedor
-            alienContainer.add(alien);
-            
-            //objects.push(alien);
-        },
-        
-        // called when loading is in progresses
-        function ( xhr ) {console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );},
-        
-        // called when loading has errors
-        function ( error ) {console.log( 'An error happened' );}
-    );
-    
-
     // target del mouse
     bullseyeRaycaster = new THREE.Raycaster();
     
@@ -311,16 +326,16 @@ function onDocumentMouseMove(event){
         {
             // únicamente relevante para el primer caso, antes de que exista la primera intersección
             if ( INTERSECTED ){
-                INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
+                //INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
             }
             
             // ahora si, settear la intersección
             INTERSECTED = intersects[ 0 ].object;
 
-            // Actualizar el material para que se vea como highlight SIEMPRE Y CUANDO NO SEA EL PISO
-            if (INTERSECTED != floor) {
-                INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
-                INTERSECTED.material.emissive.setHex( 0xff0000 );
+            // Actualizar el material para que se vea como highlight SIEMPRE Y CUANDO NO SEA EL PISO O EL CIELO
+            if (INTERSECTED != floor && INTERSECTED != skybox) {
+                //INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
+                //INTERSECTED.material.emissive.setHex( 0xff0000 );
             }
         }
     } 
@@ -330,7 +345,7 @@ function onDocumentMouseMove(event){
         if ( INTERSECTED ){
 
             // sólo hay una intersección con el raycast
-            INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
+            //INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
         } else {
 
             // no hay overlap con nada, quitar hex
@@ -348,7 +363,7 @@ function onDocumentMouseDown(event){
     event.preventDefault();
 
     // checar si se hizo click sobre un cubo y NO el piso
-    if (INTERSECTED != null && INTERSECTED != floor) {
+    if (INTERSECTED != floor && INTERSECTED != skybox) {
 
         // si hay un target válido, vamos a disparar
         shootEnemy(INTERSECTED);
@@ -376,11 +391,96 @@ function onWindowResize() {
 
 // genera un enemigo en un punto aleatorio del mapa y lo acerca al jugador
 function spawnRandomEnemy(){
-    // obtener coordenadas del jugador
 
-    // establecer posición del alien a 5 + rand[0-5] espacios del jugador
+    // generar alien
+    var manager = new THREE.LoadingManager();
+    var loader = new THREE.OBJLoader(manager);
 
-    // hacerlo acercarse al jugador con duración 5 segundos
+    var alienContainer = new THREE.Mesh(
+        new THREE.BoxGeometry(15, 15, 15),
+        new THREE.MeshPhongMaterial({
+            color: 0xffffff,
+            transparent: true,
+            opacity: 0.0,
+            overdraw: 0.5
+        }));
+        //alienContainer.position.set(0, 10, -60);
+        //scene.add(alienContainer);
+
+    loader.load("models/space_invader.obj",
+    
+        // called when resource is loaded
+        function (alien) {
+
+            // Escalar
+            alien.scale.set(0.15, 0.15, 0.15);
+
+            alien.position.set(0, -5, 0);
+
+            // Agregarselo al contenedor
+            alienContainer.add(alien);
+            
+            //objects.push(alien);
+        },
+        
+        // called when loading is in progresses
+        function ( xhr ) {console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );},
+        
+        // called when loading has errors
+        function ( error ) {console.log( 'An error happened' );}
+    );
+
+    // agregar a la escena
+    scene.add(alienContainer);
+    
+    positionsArray = [];
+
+    // edit: estas coordenadas estaban demasiado chicas y no jalaron
+    // START: coordenadas iniciales del enemigo
+
+    // coordenada x
+    if (Math.random() > 0.5) { // x-position será más positiva que la del jugador
+        enemyXpos = controls.getObject().position.x + Math.floor(Math.random() * 10)
+    } else { // x-position será más negativa que la del jugador
+        enemyXpos = controls.getObject().position.x - Math.floor(Math.random() * 10)
+    }
+
+    // coordenada z
+    if (Math.random() > 0.5) { // z-position será más positiva que la del jugador
+        enemyZpos = controls.getObject().position.z + Math.floor(Math.random() * 10)
+    } else { // z-position será más negativa que la del jugador
+        enemyZpos = controls.getObject().position.z - Math.floor(Math.random() * 10)
+    }
+
+    // iniciales
+    //positionsArray.push({x:enemyXpos, y:10, z:enemyZpos});
+
+    enemyXpos = Math.floor( Math.random() * 20 - 10 ) * 20;
+    enemyYpos = Math.floor( Math.random() * 20 ) * 20 + 10;
+    enemyZpos = Math.floor( Math.random() * 20 - 10 ) * 20;
+    positionsArray.push({x:enemyXpos, y:enemyYpos, z:enemyZpos});
+    
+    // END: coordenadas actuales del jugador
+    positionsArray.push({x:controls.getObject().position.x, y:controls.getObject().position.y, z:controls.getObject().position.z});
+
+    // hacerlo acercarse al jugador con tiempo de 5 segundos
+
+    // generar el animador
+    animator = new KF.KeyFrameAnimator;
+
+    animator.init({ 
+        interps:
+            [
+                { 
+                    keys:[0, 1], 
+                    values:positionsArray,
+                    target:alienContainer.position
+                }
+            ],
+        loop: false,
+        duration:alienmovementduration * 1000,
+        easing:TWEEN.Easing.Linear.None,
+    });
 }
 
 // setup para la animación de girar un objeto
@@ -501,6 +601,12 @@ function shoot(enemy) {
 // efectúa las animaciones en sí
 function playAnimations(){
     animator.start();
+}
+
+// proxy para generar un enemigo y hacerlo acercarse al jugador
+function generateEnemy(){
+    spawnRandomEnemy();
+    playAnimations();
 }
 
 // proxy para girar el objeto especificado
