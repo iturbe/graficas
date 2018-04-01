@@ -23,6 +23,8 @@ var froggerJumpSize = 10;
 var frogger;
 var froggerBBox;
 
+var sound;
+
 var carBBox;
 
 // Setup
@@ -62,6 +64,10 @@ function createScene(canvas) {
     //froggerBBox.setFromObject(frogger);
     scene.add(frogger);
 
+    
+    // cargar los sonidos de juego
+    loadSounds();
+
     // listener de eventos de teclado
     document.addEventListener( 'keydown', onKeyDown, false );
     
@@ -78,8 +84,78 @@ function createScene(canvas) {
     window.addEventListener( 'resize', onWindowResize);
 }
 
+function loadSounds() {
+    
+    // HOP
+    // create an AudioListener and add it to the camera
+    var listener = new THREE.AudioListener();
+    camera.add( listener );
+    // create a global audio source
+    sound = new THREE.Audio( listener );
+    // load a sound and set it as the Audio object's buffer
+    var audioLoader = new THREE.AudioLoader();
+    audioLoader.load( 'sounds/hop.wav', function( buffer ) {
+        sound.setBuffer( buffer );
+        sound.setLoop( false );
+        sound.setVolume( 0.5 );
+        //sound.play();
+    });
+
+    // BACKGROUND MUSIC
+    var listener2 = new THREE.AudioListener();
+    camera.add( listener2 );
+    bgmusic = new THREE.Audio( listener2 );
+    var audioLoader = new THREE.AudioLoader();
+    audioLoader.load( 'sounds/background.mp3', function( buffer ) {
+        bgmusic.setBuffer( buffer );
+        bgmusic.setLoop( true );
+        bgmusic.setVolume( 0.5 );
+        bgmusic.play();
+    });
+
+    // INSERT COIN
+    var listener2 = new THREE.AudioListener();
+    camera.add( listener2 );
+    bgmusic = new THREE.Audio( listener2 );
+    var audioLoader = new THREE.AudioLoader();
+    audioLoader.load( 'sounds/background.mp3', function( buffer ) {
+        bgmusic.setBuffer( buffer );
+        bgmusic.setLoop( true );
+        bgmusic.setVolume( 0.5 );
+        //bgmusic.play();
+    });
+
+    // WATER SPLASH
+    var listener2 = new THREE.AudioListener();
+    camera.add( listener2 );
+    bgmusic = new THREE.Audio( listener2 );
+    var audioLoader = new THREE.AudioLoader();
+    audioLoader.load( 'sounds/background.mp3', function( buffer ) {
+        bgmusic.setBuffer( buffer );
+        bgmusic.setLoop( true );
+        bgmusic.setVolume( 0.5 );
+        //bgmusic.play();
+    });
+
+    // CAR COLLISION
+    var listener2 = new THREE.AudioListener();
+    camera.add( listener2 );
+    bgmusic = new THREE.Audio( listener2 );
+    var audioLoader = new THREE.AudioLoader();
+    audioLoader.load( 'sounds/background.mp3', function( buffer ) {
+        bgmusic.setBuffer( buffer );
+        bgmusic.setLoop( true );
+        bgmusic.setVolume( 0.5 );
+        //bgmusic.play();
+    });
+}
+
 // listener para eventos relacionados a las teclas
 function onKeyDown ( event ){
+
+    // sonido de salto 
+    sound.play();
+
     switch ( event.keyCode ) {
 
         case 38: // up
