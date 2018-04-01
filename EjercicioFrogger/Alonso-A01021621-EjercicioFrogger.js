@@ -1,3 +1,10 @@
+// A01021621
+// Alonso Iturbe
+
+/*
+Utilizando de referencia el manejo de colisiones del código Mozilla Collisions, crear un juego de Frogger.  Tiene que tener una interfaz de usuario para iniciar o reiniciar el juego, así como para desplegar mensajes cuando algún obstáculo choque con la rana.  No es necesario utilizar modelos 3D, puede ser con las geometrías de Threejs. Deben de haber al menos 2 secciones que cruzar, y cada sección debe de tener elementos que se estén moviendo. Una sección como la carretera, donde se evita que lo choquen, y otra como el lago, donde hay que pasar por encima de los troncos. Cuando la rana llegué al otro lado, el juego se reinicia.
+*/
+
 var container;
 var camera, scene, raycaster, renderer;
 var mouse = new THREE.Vector2(), INTERSECTED;
@@ -9,26 +16,14 @@ var yMax = 0;
 var zMax = 20;
 var zMax = 20;
 var zMin = -500;
-var min = -400;
-var howManyCubes = 15;
 
-var cubeArray = [];
-var gameArray = [];
+// frogger vars
+var froggerSize = 10;
+var froggerJumpSize = 10;
+var frogger;
+var froggerBBox;
 
-var xSpacing = 140;
-var ySpacing = -200;
-
-var timeoutAmount = 1000;
-
-// puntaje confirmado del usuario
-var currentScore = 0;
-
-// puntaje temporal, reseteado cada turno
-var tempScore = 0;
-
-// contador para llevar control de cuantos cube spins llevamos
-var counter = 0;
-var x = 0;
+var carBBox;
 
 // Setup
 function createScene(canvas) {
@@ -37,76 +32,87 @@ function createScene(canvas) {
     // Set the viewport size
     renderer.setSize(window.innerWidth, window.innerHeight);
 
+    // Agregar camara
     camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 10000 );
     
+    // Setup inicial
     scene = new THREE.Scene();
     scene.background = new THREE.Color( 0xf0f0f0 );
     
+    // Luz a la escena
     var light = new THREE.DirectionalLight( 0xffffff, 1 );
     light.position.set( 1, 1, 1 );
     scene.add( light );
-    
-    var geometry = new THREE.BoxBufferGeometry( 20, 20, 20 );
 
+    // Boilerplate
     console.log("Initial setup");
     console.log(window.innerWidth);
     console.log(window.innerHeight);
     xMax = window.innerWidth;
     yMax = window.innerHeight;
 
-    // Generar 2000 cajas aleatorias
-    for ( var i = 0; i < howManyCubes; i ++ ){
-        var object = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial({color: Math.random() * 0xffffff}));
-        
-        // Generate random number between two numbers:
-        // Math.floor(Math.random() * max) + min
-        
-        // originales
-        // object.position.x = Math.random() * 800 - 400;
-        // object.position.y = Math.random() * 800 - 400;
-        // object.position.z = Math.random() * 800 - 400;
-
-        // Cuadrícula
-        xSpacing -= 80;
-        if (i % 5 == 0) {
-            ySpacing += 100;
-            xSpacing = 140;
-        }
-        object.position.x = xSpacing;
-        object.position.y = ySpacing;
-        object.position.z = -200;
-
-        // Tratando de que quepan todos en el viewport
-        // object.position.x = Math.floor(Math.random() * xMax/3) + min;
-        // object.position.y = Math.floor(Math.random() * yMax/3) + min;
-        // object.position.z = Math.floor(Math.random() * zMax) + zMin;
-        
-        object.rotation.x = Math.random() * 2 * Math.PI;
-        object.rotation.y = Math.random() * 2 * Math.PI;
-        object.rotation.z = Math.random() * 2 * Math.PI;
-        
-        object.scale.x = Math.random() + 0.5;
-        object.scale.y = Math.random() + 0.5;
-        object.scale.z = Math.random() + 0.5;
-        
-        // agregar a la escena
-        scene.add(object);
-
-        // agregar al arreglo de objetos for reference
-        cubeArray.push(object);
-    }
+    // generar la escena en sí
+    gameSetup();
     
-    raycaster = new THREE.Raycaster();
+    // agregar a frogger
+    var frogGeometry = new THREE.BoxBufferGeometry( froggerSize, froggerSize, froggerSize );
+    frogger = new THREE.Mesh( frogGeometry, new THREE.MeshLambertMaterial({color: "green"}));
+    frogger.position.set(0, -120, -200);
+    froggerBBox = new THREE.Box3().setFromObject(frogger);
+    //froggerBBox.setFromObject(frogger);
+    scene.add(frogger);
+
+    // listener de eventos de teclado
+    document.addEventListener( 'keydown', onKeyDown, false );
+    
+    //raycaster = new THREE.Raycaster();
     
     // Sensibilidad de movimiento -> como lo ponemos del tamaño de la pantalla, cada pixel de la pantalla será una posición posible para el caster
     renderer.setPixelRatio( window.devicePixelRatio );
     
     // Literal a lo que suena, funciones que se mandan llamar cuando suceden ciertos eventos
-    document.addEventListener( 'mousemove', onDocumentMouseMove );
-    document.addEventListener('mousedown', onDocumentMouseDown);
+    //document.addEventListener( 'mousemove', onDocumentMouseMove );
+    //document.addEventListener('mousedown', onDocumentMouseDown);
     
     // Que se actualize el canvas confirme se haga un resize de la pantalla
     window.addEventListener( 'resize', onWindowResize);
+}
+
+// listener para eventos relacionados a las teclas
+function onKeyDown ( event ){
+    switch ( event.keyCode ) {
+
+        case 38: // up
+        case 87: // w
+            //moveForward = true;
+            frogger.position.y += froggerJumpSize;
+            break;
+
+        case 37: // left
+        case 65: // a
+            //moveLeft = true;
+            frogger.position.x -= froggerJumpSize;
+            break;
+
+        case 40: // down
+        case 83: // s
+            //moveBackward = true;
+            frogger.position.y -= froggerJumpSize;
+            break;
+
+        case 39: // right
+        case 68: // d
+            //moveRight = true;
+            frogger.position.x += froggerJumpSize;
+            break;
+
+        // case 32: // space
+        //     if ( canJump === true ) velocity.y += 350;
+        //     canJump = false;
+        //     break;
+
+    }
+
 }
 
 // Boilerplate
@@ -233,24 +239,71 @@ function run(){
 
     // Actualizar animaciones de cubitos
     KF.update();
+
+    // checar colisiones
+    //checkCollisions();
+
+    //console.log("We updating");
 }
 
 // Bolierplate
 function render(){
     renderer.render( scene, camera );
+    //console.log("We updating");
+    checkCollisions();
+}
+
+function checkCollisions() {
+    // bounding boxes need updating to objects in order for them to work!
+    froggerBBox.setFromObject(frogger);
+
+    // loop through all the active objects in the scene, checking for collisions...
+
+    // global "area" variable will identify which case to enter 
+    // make sure to update area within render according to frogger's coordinates!
+
+    // area = 1 -> check for car collisions -> end game if true
+    // area = 2 -> check for log collisions -> end game if false
+    // if within area 2, will also need to update frogger's position according to whether he's on a log or not...
+    // bool "onlog" -> update position at the same speed as the logs... manual animations will work best in this scenario
+    // area = 3 -> check for car collisions -> end game if true
+
+    // compute intersection size
+    xInt = froggerBBox.intersect(carBBox).getSize().x;
+    yInt = froggerBBox.intersect(carBBox).getSize().y;
+    zInt = froggerBBox.intersect(carBBox).getSize().z;
+    
+    if (xInt > 0 && yInt > 0 && zInt > 0) { // we have a colisión and not just touchpoints
+        document.getElementById("displayScore").innerHTML = "Collision detected!";
+        console.log("Collision detected");
+        console.log(froggerBBox.intersect(carBBox).getSize());
+    } else {
+        document.getElementById("displayScore").innerHTML = "We gucci";
+        //console.log("nope");
+    }
 }
 
 // Setup de elementos del juego
 function gameSetup() {
-    
-    // // Llenar arreglo de juego
-    // Cada posición del arreglo es la iteración en la cual se iluminará el cubo
-    //Math.floor(Math.random() * 6) + 1  
-    for (let index = 0; index < howManyCubes; index++) {
-        gameArray.push(Math.floor(Math.random() * howManyCubes) + 0);
-    }
 
-    console.log(gameArray);
+    // Auxiliares
+    howManyCars = 5;
+    howManyLogs = 5;
+    carGroup = new THREE.Object3D;
+    scene.add(carGroup);
+
+    // cars 1
+    var carGeometry = new THREE.BoxBufferGeometry( 10, 10, 10 );
+    newCar = new THREE.Mesh( carGeometry, new THREE.MeshLambertMaterial({color: "black"}));
+    newCar.position.set(0, -80, -200);
+    carBBox = new THREE.Box3().setFromObject(newCar);
+    //carBBox.setFromObject(newCar);
+    carGroup.add(newCar);
+
+    // logs
+
+    // cars 2
+    
 }
 
 // iluminar el primer cubo para que el jugador sepa que onda
@@ -264,7 +317,7 @@ function firstTurn(){
 
 }
 
-// hace setup para la animación de girar el cubo
+// hace setup para la animación de girar el cubo <- CHECAR SI CON ANIMATOR START AL FINAL ES SUFICIENTE
 function spinResizeAnimationPositive(targetCube){
 
     //console.log(targetCube);
@@ -332,98 +385,19 @@ function spinResizeAnimationPositive(targetCube){
         duration:duration * 1000,
         easing:TWEEN.Easing.Linear.None,
     });
-}
 
-// hace setup para la animación de girar el cubo
-function spinResizeAnimationNegative(targetCube){
-
-    //console.log(targetCube);
-    
-    // generar el animador
-    animator = new KF.KeyFrameAnimator;
-
-    var radius = 5; // radio del círculo sobre el cual queremos que se mueva el monstruo
-    var slices = 360; // cuántas subdivisiones se harán
-    var positionsArray = [];
-    var rotationArray = [];
-    var temp = "";
-    var keyArray = []
-    var angle = 0;
-    var duration = 0.5; // un segundo de animación
-    
-    // Generar valores de círculo
-    for (var a = 0; a <= slices; a++) {
-        
-        // cada posición se calcula basado en el ángulo subsecuente del círculo unitario
-        angle = ((2 * Math.PI)/slices) * a;
-
-        // Generar un string con los valores
-        temp = "{\"x\":" + Math.cos(angle)*radius + ",\"y\":0,\"z\":" + Math.sin(angle)*radius + '}';
-        
-        // parsear y meter al arreglo
-        positionsArray.push(JSON.parse(temp))
-        
-        // generar valor de la llave y meterla al arreglo también
-        keyArray.push(a/slices);
-
-        // Generar string con el valor
-        temp = "{\"y\":" + angle + '}';
-
-        // obtener ángulo de rotación y meterlo al arreglo de ángulos
-        rotationArray.push(JSON.parse(temp));
-    }
-
-    // z-value de la posición es el que hay que modificar
-    var currentPosition = targetCube.position;
-
-    var myValues = []
-
-    myValues.push({x:currentPosition.x, y:currentPosition.y, z:-200});
-    myValues.push({x:currentPosition.x, y:currentPosition.y, z:-210});
-    myValues.push({x:currentPosition.x, y:currentPosition.y, z:-220});
-    myValues.push({x:currentPosition.x, y:currentPosition.y, z:-210});
-    myValues.push({x:currentPosition.x, y:currentPosition.y, z:-200});
-
-    animator.init({ 
-        interps:
-            [
-                { 
-                    keys:keyArray, 
-                    values:rotationArray,
-                    target:targetCube.rotation
-                },
-                { 
-                    keys:[0, 0.25, 0.5, 0.75, 1], 
-                    values:myValues,
-                    target:targetCube.position
-                },
-            ],
-        loop: false,
-        duration:duration * 1000,
-        easing:TWEEN.Easing.Linear.None,
-    });
+    animator.start();
 }
 
 // efectúa la animación en sí del cubo
 function playAnimations(){
-    //console.log(cube);
     animator.start();
 }
 
-// gira el cubo especificado hacia el usuario
+// proxy para girar el cubo
 function spinCubePositive(targetCube){
-    // spinAnimation(targetCube);
-    // resizeAnimation(targetCube);
     spinResizeAnimationPositive(targetCube);
-    playAnimations(targetCube);
-}
-
-// gira el cubo especificado NO hacia el usuario (es para cuando hace click)
-function spinCubeNegative(targetCube){
-    // spinAnimation(targetCube);
-    // resizeAnimation(targetCube);
-    spinResizeAnimationNegative(targetCube);
-    playAnimations(targetCube);
+    playAnimations();
 }
 
 // recorre gameArray, girando cada cubo para que el usuario vea la secuencia

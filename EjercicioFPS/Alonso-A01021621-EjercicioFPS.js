@@ -8,9 +8,11 @@ var floor, skybox;
 
 var blocker,  instructions;
 
-var bullet;
+var laser;
 
-var bulletduration = 0.3; // seconds
+var currentScore = 0;
+
+var laserduration = 0.3; // seconds
 var spinduration = 0.3; // seconds
 var alienmovementduration = 5; // seconds
 
@@ -28,33 +30,6 @@ var velocity, direction;
 var floorUrl = "../images/grassMaterial.jpg";
 var cubeUrl = "../images/wooden_crate_texture_by_zackseeker-d38ddsb.png";
 
-// var urlPrefix = "../images/skybox/";
-// var urls = [
-//     urlPrefix + "px.jpg",
-//     urlPrefix + "nx.jpg",
-//     urlPrefix + "py.jpg",
-//     urlPrefix + "ny.jpg",
-//     urlPrefix + "pz.jpg",
-//     urlPrefix + "nz.jpg"];
-// var textureCube = THREE.ImageUtils.loadTextureCube( urls );
-
-// var shader = THREE.ShaderUtils.lib["cube"];
-// var uniforms = THREE.UniformsUtils.clone( shader.uniforms );
-// uniforms['tCube'].texture= textureCube; 
-// var material = new THREE.MeshShaderMaterial({
-//     fragmentShader    : shader.fragmentShader,
-//     vertexShader  : shader.vertexShader,
-//     uniforms  : uniforms
-// });
-
-// // build the skybox Mesh 
-// skyboxMesh = new THREE.Mesh( new THREE.CubeGeometry( 100000, 100000, 100000, 1, 1, 1, null, true ), material );
-// skyboxMesh.doubleSided = true;
-// // add it to the scene
-// scene.addObject( skyboxMesh );
-
-
-//skybox
 
 var mouse = new THREE.Vector2(), INTERSECTED;
 
@@ -221,12 +196,10 @@ function createScene(canvas){
         materialArray.push( new THREE.MeshBasicMaterial({map: new THREE.TextureLoader().load( imagePrefix + directions[i] + imageSuffix), side:THREE.DoubleSide}));
     }
 
-    var skyGeometry = new THREE.CubeGeometry( 500, 500, 500 );
+    var skyGeometry = new THREE.BoxGeometry( 500, 500, 500 );
     var skyMaterial = new THREE.MeshFaceMaterial( materialArray );
     skyBox = new THREE.Mesh( skyGeometry, skyMaterial );
-    //skyBox.material.side = THREE.DoubleSide; // hacer que se vea desde adentro
-    //skyBox.rotation.x += Math.PI / 2;
-    //scene.add( skyBox );
+    //scene.add(skyBox);
 
 
 
@@ -286,10 +259,10 @@ function createScene(canvas){
     //     objects.push( box );
     // }
 
-    // crear bala
+    // crear disparo
     var material = new THREE.MeshBasicMaterial( {color: "red"} );
-    var bulletGeometry = new THREE.SphereGeometry(.5, 32, 32);
-    bullet = new THREE.Mesh( bulletGeometry, material );
+    var laserGeometry = new THREE.SphereGeometry(.5, 32, 32);
+    laser = new THREE.Mesh( laserGeometry, material );
     
     // target del mouse
     bullseyeRaycaster = new THREE.Raycaster();
@@ -326,7 +299,7 @@ function onDocumentMouseMove(event){
         {
             // únicamente relevante para el primer caso, antes de que exista la primera intersección
             if ( INTERSECTED ){
-                //INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
+                INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
             }
             
             // ahora si, settear la intersección
@@ -334,8 +307,8 @@ function onDocumentMouseMove(event){
 
             // Actualizar el material para que se vea como highlight SIEMPRE Y CUANDO NO SEA EL PISO O EL CIELO
             if (INTERSECTED != floor && INTERSECTED != skybox) {
-                //INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
-                //INTERSECTED.material.emissive.setHex( 0xff0000 );
+                INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
+                INTERSECTED.material.emissive.setHex( 0xff0000 );
             }
         }
     } 
@@ -345,7 +318,7 @@ function onDocumentMouseMove(event){
         if ( INTERSECTED ){
 
             // sólo hay una intersección con el raycast
-            //INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
+            INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
         } else {
 
             // no hay overlap con nada, quitar hex
@@ -356,8 +329,6 @@ function onDocumentMouseMove(event){
 
 // Cachar evento de click de mouse
 function onDocumentMouseDown(event){
-
-    //console.log("user clicked, cs: " + currentScore + ", ts: " + tempScore);
     
     // Prevenir que el manejador de eventos utilice el evento default
     event.preventDefault();
@@ -373,9 +344,12 @@ function onDocumentMouseDown(event){
 
         //borrar enemigo y bala del mapa, esperando a la bala y la animación de spin
         setTimeout(function(){
-            scene.remove(bullet);
+            scene.remove(laser);
             scene.remove(INTERSECTED);
-        }, (spinduration+bulletduration)*1000);
+            // actualizar score
+            currentScore++;
+            document.getElementById("displayScore").innerHTML = "Aliens shot: " + currentScore;
+        }, (spinduration+laserduration)*1000);
     }
 }
 
@@ -578,10 +552,10 @@ function shoot(enemy) {
 
     console.log(positionsArray);
 
-    bullet.position.x = controls.getObject().position.x;
-    bullet.position.y = controls.getObject().position.y;
-    bullet.position.z = controls.getObject().position.z;
-    scene.add(bullet);
+    laser.position.x = controls.getObject().position.x;
+    laser.position.y = controls.getObject().position.y;
+    laser.position.z = controls.getObject().position.z;
+    scene.add(laser);
 
     animator.init({ 
         interps:
@@ -589,11 +563,11 @@ function shoot(enemy) {
                 { 
                     keys:keyArray, 
                     values:positionsArray,
-                    target:bullet.position
+                    target:laser.position
                 }
             ],
         loop: false,
-        duration:bulletduration * 1000,
+        duration:laserduration * 1000,
         easing:TWEEN.Easing.Linear.None,
     });
 }
