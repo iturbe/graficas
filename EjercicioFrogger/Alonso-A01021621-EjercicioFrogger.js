@@ -170,50 +170,56 @@ function updatePositions() {
 
     // logs
     for (let a = 0; a < logGroup.length; a++) {
+        
+        // logs moving left
         if (a % 2 === 0) {
-            if (logGroup[a].position.x < -200) { // edge
+            if (logGroup[a].position.x < -200) { // check for edge
                 logGroup[a].position.x = 200;
             }
             logGroup[a].position.x -= 2;
+
         } else {
-            if (logGroup[a].position.x > 200) { // edge
+            // logs moving right
+            if (logGroup[a].position.x > 200) { // check for edge
                 logGroup[a].position.x = -200;
             }
+
             logGroup[a].position.x += 2;
         }
+    }
+
+    // frogger, if he's on a log
+    if (onLog && (frogger.position.y === 0)) {
+        frogger.position.x -= 2;
+    }
+    if (onLog && (frogger.position.y === -10)) {
+        frogger.position.x += 2;
+    }
+    if (onLog && (frogger.position.y === -20)) {
+        frogger.position.x -= 2;
     }
 
     // cars 2
     for (let a = 0; a < carGroup2.length; a++) {
         if (a % 2 === 0) { // alternate between left and right-direction updates
-            if (carGroup2[a].position.x < -200) { // edge
+            if (carGroup2[a].position.x < -200) { // check for edge
                 carGroup2[a].position.x = 200;
             }
             carGroup2[a].position.x -= 4;
         } else {
-            if (carGroup2[a].position.x > 200) { // edge
+            if (carGroup2[a].position.x > 200) { // check for edge
                 carGroup2[a].position.x = -200;
             }
             carGroup2[a].position.x += 4;
         }
     }
-
-    // frogger, if he's on a log
 }
 
 function checkCollisions() {
 
-    // update area variable according to frogger's position
-
-    // loop through all the active objects in the scene, checking for collisions...
-
-    // global "area" variable will identify which case to enter 
-    // make sure to update area within render according to frogger's coordinates!
-
     // area = 1 -> check for car collisions -> end game if true
     // area = 2 -> check for log collisions -> end game if false
     // if within area 2, will also need to update frogger's position according to whether he's on a log or not...
-    // bool "onlog" -> update position at the same speed as the logs... manual animations will work best in this scenario
     // area = 3 -> check for car collisions -> end game if true
 
     //console.log(carGroup1.length);
@@ -223,6 +229,7 @@ function checkCollisions() {
     yPos = frogger.position.y;
     zPos = frogger.position.z;
 
+    // update area variable according to frogger's position
     if (yPos > -100) {
         area = 1;
         if (yPos > -30) {
@@ -237,7 +244,9 @@ function checkCollisions() {
     }
 
     // display
-    document.getElementById("displayScore").innerHTML = "("+xPos+","+yPos+","+zPos+") - Area "+area;
+    document.getElementById("displayScore").innerHTML = "("+xPos+","+yPos+","+zPos+") - Area "+area+onLog;
+
+    // loop through all the active objects in the scene, checking for collisions...
 
     // Cars 1
     for (let a = 0; a < carGroup1.length; a++) {
@@ -256,12 +265,14 @@ function checkCollisions() {
         // check for collisions and not just touchpoints
         if (xInt > 0 && yInt > 0 && zInt > 0) {
             console.log("Collision detected: Cars 1, car #"+a);
+            collision.play();
         } else {
             //console.log("No collisions detected");
         }
     }
 
     // Logs
+    const onLogArr = [false, false, false];
     for (let a = 0; a < logGroup.length; a++) {
 
         // bounding boxes need constant object assigning in order for them to work!
@@ -277,13 +288,16 @@ function checkCollisions() {
 
         // check for collisions and not just touchpoints
         if (xInt > 0 && yInt > 0 && zInt > 0) {
+            onLogArr[a] = true;
             console.log("Collision detected: Logs, log #"+a);
-            onLog = true;
         } else {
             //console.log("No collisions detected");
-            onLog = false;
+            onLogArr[a] = false;
         }
     }
+
+    // sólamente asignar la variable de onLog en caso de que estemos en un log
+    onLog = onLogArr.reduce((acc, cur) => cur ? true : acc, false);
 
     // Cars 2
     for (let a = 0; a < carGroup2.length; a++) {
@@ -302,6 +316,7 @@ function checkCollisions() {
         // check for collisions and not just touchpoints
         if (xInt > 0 && yInt > 0 && zInt > 0) {
             console.log("Collision detected: Cars 2, car #"+a);
+            collision.play();
         } else {
             //console.log("No collisions detected");
         }
@@ -322,7 +337,7 @@ function loadSounds() {
     audioLoader1.load( 'sounds/hop.wav', function( buffer ) {
         hop.setBuffer( buffer );
         hop.setLoop( false );
-        hop.setVolume( 0.5 );
+        hop.setVolume( 0.6 );
         //hop.play();
     });
 
@@ -334,8 +349,8 @@ function loadSounds() {
     audioLoader2.load( 'sounds/background.mp3', function( buffer ) {
         bgmusic.setBuffer( buffer );
         bgmusic.setLoop( true );
-        bgmusic.setVolume( 0.5 );
-        //bgmusic.play();
+        bgmusic.setVolume( 0.3 );
+        bgmusic.play();
     });
 
     // INSERT COIN
@@ -343,10 +358,10 @@ function loadSounds() {
     camera.add( listener3 );
     coin = new THREE.Audio( listener3 );
     var audioLoader3 = new THREE.AudioLoader();
-    audioLoader3.load( 'sounds/background.mp3', function( buffer ) {
+    audioLoader3.load( 'sounds/coin.wav', function( buffer ) {
         coin.setBuffer( buffer );
-        coin.setLoop( true );
-        coin.setVolume( 0.5 );
+        coin.setLoop( false );
+        coin.setVolume( 0.6 );
         //coin.play();
     });
 
@@ -355,10 +370,10 @@ function loadSounds() {
     camera.add( listener4 );
     splash = new THREE.Audio( listener4 );
     var audioLoader4 = new THREE.AudioLoader();
-    audioLoader4.load( 'sounds/background.mp3', function( buffer ) {
+    audioLoader4.load( 'sounds/splash.wav', function( buffer ) {
         splash.setBuffer( buffer );
-        splash.setLoop( true );
-        splash.setVolume( 0.5 );
+        splash.setLoop( false );
+        splash.setVolume( 0.6 );
         //splash.play();
     });
 
@@ -367,10 +382,10 @@ function loadSounds() {
     camera.add( listener5 );
     collision = new THREE.Audio( listener5 );
     var audioLoader5 = new THREE.AudioLoader();
-    audioLoader5.load( 'sounds/background.mp3', function( buffer ) {
+    audioLoader5.load( 'sounds/squash.wav', function( buffer ) {
         collision.setBuffer( buffer );
-        collision.setLoop( true );
-        collision.setVolume( 0.5 );
+        collision.setLoop( false );
+        collision.setVolume( 0.6 );
         //collision.play();
     });
 }
@@ -378,7 +393,8 @@ function loadSounds() {
 // listener para eventos relacionados a las teclas
 function onKeyDown ( event ){
 
-    //hop.play(); // sonido de salto 
+    hop.isPlaying = false;
+    hop.play(); // sonido de salto 
 
     switch ( event.keyCode ) {
 
@@ -550,8 +566,9 @@ function run(){
 function render(){
     renderer.render( scene, camera );
     //console.log("We updating");
-    updatePositions();
     checkCollisions();
+    updatePositions();
+    
 }
 
 // iluminar el primer cubo para que el jugador sepa que onda
