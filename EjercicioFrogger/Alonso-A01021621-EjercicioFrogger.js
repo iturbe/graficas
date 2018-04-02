@@ -23,9 +23,14 @@ var froggerJumpSize = 10;
 var frogger;
 var froggerBBox;
 
-var sound;
+// sound effects
+var hop, bgmusic, coin, splash, collision;
 
-var carBBox;
+// carros
+var carGroup1;
+var car1, car2;
+var car1BB, car2BB;
+//var carBBox;
 
 // Setup
 function createScene(canvas) {
@@ -52,18 +57,16 @@ function createScene(canvas) {
     console.log(window.innerHeight);
     xMax = window.innerWidth;
     yMax = window.innerHeight;
+    
+    // agregar a frogger
+    var frogGeometry = new THREE.BoxBufferGeometry( froggerSize, froggerSize, 5 );
+    frogger = new THREE.Mesh( frogGeometry, new THREE.MeshLambertMaterial({color: "green"}));
+    frogger.position.set(0, -120, -200);
+    //froggerBBox = new THREE.Box3().setFromObject(frogger); // en realidad ni se necesita aquí
+    scene.add(frogger);
 
     // generar la escena en sí
     gameSetup();
-    
-    // agregar a frogger
-    var frogGeometry = new THREE.BoxBufferGeometry( froggerSize, froggerSize, froggerSize );
-    frogger = new THREE.Mesh( frogGeometry, new THREE.MeshLambertMaterial({color: "green"}));
-    frogger.position.set(0, -120, -200);
-    froggerBBox = new THREE.Box3().setFromObject(frogger);
-    //froggerBBox.setFromObject(frogger);
-    scene.add(frogger);
-
     
     // cargar los sonidos de juego
     loadSounds();
@@ -84,6 +87,100 @@ function createScene(canvas) {
     window.addEventListener( 'resize', onWindowResize);
 }
 
+// Setup de elementos del juego
+function gameSetup() {
+
+    // Auxiliares
+    howManyCars = 5;
+    howManyLogs = 5;
+    //carGroup = new THREE.Object3D;
+    //scene.add(carGroup);
+    carGroup1 = [];
+    yInitial = -90;
+    xInitial = 0;
+
+    var carGeometry = new THREE.BoxBufferGeometry( 20, 10, 5 );
+
+    // generar los carros
+    for (let a = 0; a < howManyCars; a++) {
+        var newCar = new THREE.Mesh( carGeometry, new THREE.MeshLambertMaterial({color: "black"}));
+        newCar.position.set(xInitial, yInitial, -201);
+        //carBBox = new THREE.Box3().setFromObject(newCar);
+        carGroup1.push(newCar);
+        scene.add(newCar);
+
+        yInitial += 10;
+        xInitial += 20;
+    }
+    
+    // logs
+
+    // cars 2
+    
+}
+
+// updates the position of cars, logs and frogger (if he's on a log)
+function updatePositions() {
+    // cars
+    for (let a = 0; a < carGroup1.length; a++) {
+        if (carGroup1[a].position.x < -200) { // edge
+            carGroup1[a].position.x = 200;
+        }
+        carGroup1[a].position.x -= 5;
+    }
+
+    // logs
+    // cars 2
+    // frogger, if he's on a log
+}
+
+function checkCollisions() {
+
+    // update area variable according to frogger's position
+
+    // loop through all the active objects in the scene, checking for collisions...
+
+    // global "area" variable will identify which case to enter 
+    // make sure to update area within render according to frogger's coordinates!
+
+    // area = 1 -> check for car collisions -> end game if true
+    // area = 2 -> check for log collisions -> end game if false
+    // if within area 2, will also need to update frogger's position according to whether he's on a log or not...
+    // bool "onlog" -> update position at the same speed as the logs... manual animations will work best in this scenario
+    // area = 3 -> check for car collisions -> end game if true
+
+    //console.log(carGroup1.length);
+
+    // Cars 1
+    for (let a = 0; a < carGroup1.length; a++) {
+
+        // bounding boxes need constant object assigning in order for them to work!
+        froggerBBox = new THREE.Box3().setFromObject(frogger);
+
+        xPos = frogger.position.x;
+        yPos = frogger.position.y;
+        zPos = frogger.position.z;
+
+        // establecer bounding box del coche
+        var carBBox = new THREE.Box3().setFromObject(carGroup1[a]);
+
+        // compute intersection size
+        xInt = froggerBBox.intersect(carBBox).getSize().x;
+        yInt = froggerBBox.intersect(carBBox).getSize().y;
+        zInt = froggerBBox.intersect(carBBox).getSize().z;
+
+        document.getElementById("displayScore").innerHTML = "("+xPos+","+yPos+","+zPos+")";
+
+        // check for collisions and not just touchpoints
+        if (xInt > 0 && yInt > 0 && zInt > 0) {
+            console.log("Collision detected with car #"+a);
+        } else {
+            //console.log("No collisions detected");
+        }
+    }
+}
+
+// cargar todos los sonidos de juego
 function loadSounds() {
     
     // HOP
@@ -91,70 +188,69 @@ function loadSounds() {
     var listener = new THREE.AudioListener();
     camera.add( listener );
     // create a global audio source
-    sound = new THREE.Audio( listener );
+    hop = new THREE.Audio( listener );
     // load a sound and set it as the Audio object's buffer
-    var audioLoader = new THREE.AudioLoader();
-    audioLoader.load( 'sounds/hop.wav', function( buffer ) {
-        sound.setBuffer( buffer );
-        sound.setLoop( false );
-        sound.setVolume( 0.5 );
-        //sound.play();
+    var audioLoader1 = new THREE.AudioLoader();
+    audioLoader1.load( 'sounds/hop.wav', function( buffer ) {
+        hop.setBuffer( buffer );
+        hop.setLoop( false );
+        hop.setVolume( 0.5 );
+        //hop.play();
     });
 
     // BACKGROUND MUSIC
     var listener2 = new THREE.AudioListener();
     camera.add( listener2 );
     bgmusic = new THREE.Audio( listener2 );
-    var audioLoader = new THREE.AudioLoader();
-    audioLoader.load( 'sounds/background.mp3', function( buffer ) {
+    var audioLoader2 = new THREE.AudioLoader();
+    audioLoader2.load( 'sounds/background.mp3', function( buffer ) {
         bgmusic.setBuffer( buffer );
         bgmusic.setLoop( true );
         bgmusic.setVolume( 0.5 );
-        bgmusic.play();
+        //bgmusic.play();
     });
 
     // INSERT COIN
-    var listener2 = new THREE.AudioListener();
-    camera.add( listener2 );
-    bgmusic = new THREE.Audio( listener2 );
-    var audioLoader = new THREE.AudioLoader();
-    audioLoader.load( 'sounds/background.mp3', function( buffer ) {
-        bgmusic.setBuffer( buffer );
-        bgmusic.setLoop( true );
-        bgmusic.setVolume( 0.5 );
-        //bgmusic.play();
+    var listener3 = new THREE.AudioListener();
+    camera.add( listener3 );
+    coin = new THREE.Audio( listener3 );
+    var audioLoader3 = new THREE.AudioLoader();
+    audioLoader3.load( 'sounds/background.mp3', function( buffer ) {
+        coin.setBuffer( buffer );
+        coin.setLoop( true );
+        coin.setVolume( 0.5 );
+        //coin.play();
     });
 
     // WATER SPLASH
-    var listener2 = new THREE.AudioListener();
-    camera.add( listener2 );
-    bgmusic = new THREE.Audio( listener2 );
-    var audioLoader = new THREE.AudioLoader();
-    audioLoader.load( 'sounds/background.mp3', function( buffer ) {
-        bgmusic.setBuffer( buffer );
-        bgmusic.setLoop( true );
-        bgmusic.setVolume( 0.5 );
-        //bgmusic.play();
+    var listener4 = new THREE.AudioListener();
+    camera.add( listener4 );
+    splash = new THREE.Audio( listener4 );
+    var audioLoader4 = new THREE.AudioLoader();
+    audioLoader4.load( 'sounds/background.mp3', function( buffer ) {
+        splash.setBuffer( buffer );
+        splash.setLoop( true );
+        splash.setVolume( 0.5 );
+        //splash.play();
     });
 
     // CAR COLLISION
-    var listener2 = new THREE.AudioListener();
-    camera.add( listener2 );
-    bgmusic = new THREE.Audio( listener2 );
-    var audioLoader = new THREE.AudioLoader();
-    audioLoader.load( 'sounds/background.mp3', function( buffer ) {
-        bgmusic.setBuffer( buffer );
-        bgmusic.setLoop( true );
-        bgmusic.setVolume( 0.5 );
-        //bgmusic.play();
+    var listener5 = new THREE.AudioListener();
+    camera.add( listener5 );
+    collision = new THREE.Audio( listener5 );
+    var audioLoader5 = new THREE.AudioLoader();
+    audioLoader5.load( 'sounds/background.mp3', function( buffer ) {
+        collision.setBuffer( buffer );
+        collision.setLoop( true );
+        collision.setVolume( 0.5 );
+        //collision.play();
     });
 }
 
 // listener para eventos relacionados a las teclas
 function onKeyDown ( event ){
 
-    // sonido de salto 
-    sound.play();
+    //hop.play(); // sonido de salto 
 
     switch ( event.keyCode ) {
 
@@ -326,60 +422,8 @@ function run(){
 function render(){
     renderer.render( scene, camera );
     //console.log("We updating");
+    updatePositions();
     checkCollisions();
-}
-
-function checkCollisions() {
-    // bounding boxes need updating to objects in order for them to work!
-    froggerBBox.setFromObject(frogger);
-
-    // loop through all the active objects in the scene, checking for collisions...
-
-    // global "area" variable will identify which case to enter 
-    // make sure to update area within render according to frogger's coordinates!
-
-    // area = 1 -> check for car collisions -> end game if true
-    // area = 2 -> check for log collisions -> end game if false
-    // if within area 2, will also need to update frogger's position according to whether he's on a log or not...
-    // bool "onlog" -> update position at the same speed as the logs... manual animations will work best in this scenario
-    // area = 3 -> check for car collisions -> end game if true
-
-    // compute intersection size
-    xInt = froggerBBox.intersect(carBBox).getSize().x;
-    yInt = froggerBBox.intersect(carBBox).getSize().y;
-    zInt = froggerBBox.intersect(carBBox).getSize().z;
-    
-    if (xInt > 0 && yInt > 0 && zInt > 0) { // we have a colisión and not just touchpoints
-        document.getElementById("displayScore").innerHTML = "Collision detected!";
-        console.log("Collision detected");
-        console.log(froggerBBox.intersect(carBBox).getSize());
-    } else {
-        document.getElementById("displayScore").innerHTML = "We gucci";
-        //console.log("nope");
-    }
-}
-
-// Setup de elementos del juego
-function gameSetup() {
-
-    // Auxiliares
-    howManyCars = 5;
-    howManyLogs = 5;
-    carGroup = new THREE.Object3D;
-    scene.add(carGroup);
-
-    // cars 1
-    var carGeometry = new THREE.BoxBufferGeometry( 10, 10, 10 );
-    newCar = new THREE.Mesh( carGeometry, new THREE.MeshLambertMaterial({color: "black"}));
-    newCar.position.set(0, -80, -200);
-    carBBox = new THREE.Box3().setFromObject(newCar);
-    //carBBox.setFromObject(newCar);
-    carGroup.add(newCar);
-
-    // logs
-
-    // cars 2
-    
 }
 
 // iluminar el primer cubo para que el jugador sepa que onda
