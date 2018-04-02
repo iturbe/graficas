@@ -22,6 +22,8 @@ var froggerSize = 10;
 var froggerJumpSize = 10;
 var frogger;
 var froggerBBox;
+var area = 0;
+var onLog = false;
 
 // sound effects
 var hop, bgmusic, coin, splash, collision;
@@ -92,45 +94,110 @@ function gameSetup() {
 
     // Auxiliares
     howManyCars = 5;
-    howManyLogs = 5;
-    //carGroup = new THREE.Object3D;
-    //scene.add(carGroup);
+    howManyLogs = 3;
     carGroup1 = [];
-    yInitial = -90;
-    xInitial = 0;
+    logGroup = [];
+    carGroup2 = [];
 
+    // Carros 1
+    yInitialCars1 = -90;
+    xInitialCars1 = 0;
+
+    // Logs
+    yInitialLogs = -20;
+    xInitialLogs = 0;
+
+    // Carros 2
+    yInitialCars2 = 30;
+    xInitialCars2 = 0;
+
+    // geometrías
     var carGeometry = new THREE.BoxBufferGeometry( 20, 10, 5 );
+    var logGeometry = new THREE.BoxBufferGeometry( 50, 10, 5 );
 
-    // generar los carros
+    // cars 1
     for (let a = 0; a < howManyCars; a++) {
         var newCar = new THREE.Mesh( carGeometry, new THREE.MeshLambertMaterial({color: "black"}));
-        newCar.position.set(xInitial, yInitial, -201);
-        //carBBox = new THREE.Box3().setFromObject(newCar);
+        newCar.position.set(xInitialCars1, yInitialCars1, -201);
         carGroup1.push(newCar);
         scene.add(newCar);
 
-        yInitial += 10;
-        xInitial += 20;
+        yInitialCars1 += 10;
+        xInitialCars1 += 20;
     }
     
     // logs
+    for (let a = 0; a < howManyLogs; a++) {
+        var newLog = new THREE.Mesh( logGeometry, new THREE.MeshLambertMaterial({color: "brown"}));
+        newLog.position.set(xInitialLogs, yInitialLogs, -201);
+        logGroup.push(newLog);
+        scene.add(newLog);
+
+        yInitialLogs += 10;
+        xInitialLogs += 20;
+    }
 
     // cars 2
+    for (let a = 0; a < howManyCars; a++) {
+        var newCar = new THREE.Mesh( carGeometry, new THREE.MeshLambertMaterial({color: "black"}));
+        newCar.position.set(xInitialCars2, yInitialCars2, -201);
+        carGroup2.push(newCar);
+        scene.add(newCar);
+
+        yInitialCars2 += 10;
+        xInitialCars2 += 20;
+    }
     
 }
 
 // updates the position of cars, logs and frogger (if he's on a log)
 function updatePositions() {
+
     // cars
     for (let a = 0; a < carGroup1.length; a++) {
-        if (carGroup1[a].position.x < -200) { // edge
-            carGroup1[a].position.x = 200;
+        if (a % 2 === 0) { // alternate between left and right-direction updates
+            if (carGroup1[a].position.x < -200) { // edge
+                carGroup1[a].position.x = 200;
+            }
+            carGroup1[a].position.x -= 1;
+        } else {
+            if (carGroup1[a].position.x > 200) { // edge
+                carGroup1[a].position.x = -200;
+            }
+            carGroup1[a].position.x += 1;
         }
-        carGroup1[a].position.x -= 5;
     }
 
     // logs
+    for (let a = 0; a < logGroup.length; a++) {
+        if (a % 2 === 0) {
+            if (logGroup[a].position.x < -200) { // edge
+                logGroup[a].position.x = 200;
+            }
+            logGroup[a].position.x -= 2;
+        } else {
+            if (logGroup[a].position.x > 200) { // edge
+                logGroup[a].position.x = -200;
+            }
+            logGroup[a].position.x += 2;
+        }
+    }
+
     // cars 2
+    for (let a = 0; a < carGroup2.length; a++) {
+        if (a % 2 === 0) { // alternate between left and right-direction updates
+            if (carGroup2[a].position.x < -200) { // edge
+                carGroup2[a].position.x = 200;
+            }
+            carGroup2[a].position.x -= 4;
+        } else {
+            if (carGroup2[a].position.x > 200) { // edge
+                carGroup2[a].position.x = -200;
+            }
+            carGroup2[a].position.x += 4;
+        }
+    }
+
     // frogger, if he's on a log
 }
 
@@ -151,15 +218,32 @@ function checkCollisions() {
 
     //console.log(carGroup1.length);
 
+    // get frogger's position
+    xPos = frogger.position.x;
+    yPos = frogger.position.y;
+    zPos = frogger.position.z;
+
+    if (yPos > -100) {
+        area = 1;
+        if (yPos > -30) {
+            area = 2;
+            if (yPos > 20) {
+                area = 3;
+                if (yPos > 70) {
+                    area = 4;
+                }
+            }
+        }
+    }
+
+    // display
+    document.getElementById("displayScore").innerHTML = "("+xPos+","+yPos+","+zPos+") - Area "+area;
+
     // Cars 1
     for (let a = 0; a < carGroup1.length; a++) {
 
         // bounding boxes need constant object assigning in order for them to work!
         froggerBBox = new THREE.Box3().setFromObject(frogger);
-
-        xPos = frogger.position.x;
-        yPos = frogger.position.y;
-        zPos = frogger.position.z;
 
         // establecer bounding box del coche
         var carBBox = new THREE.Box3().setFromObject(carGroup1[a]);
@@ -169,11 +253,55 @@ function checkCollisions() {
         yInt = froggerBBox.intersect(carBBox).getSize().y;
         zInt = froggerBBox.intersect(carBBox).getSize().z;
 
-        document.getElementById("displayScore").innerHTML = "("+xPos+","+yPos+","+zPos+")";
+        // check for collisions and not just touchpoints
+        if (xInt > 0 && yInt > 0 && zInt > 0) {
+            console.log("Collision detected: Cars 1, car #"+a);
+        } else {
+            //console.log("No collisions detected");
+        }
+    }
+
+    // Logs
+    for (let a = 0; a < logGroup.length; a++) {
+
+        // bounding boxes need constant object assigning in order for them to work!
+        froggerBBox = new THREE.Box3().setFromObject(frogger);
+
+        // establecer bounding box del log
+        var logBBox = new THREE.Box3().setFromObject(logGroup[a]);
+
+        // compute intersection size
+        xInt = froggerBBox.intersect(logBBox).getSize().x;
+        yInt = froggerBBox.intersect(logBBox).getSize().y;
+        zInt = froggerBBox.intersect(logBBox).getSize().z;
 
         // check for collisions and not just touchpoints
         if (xInt > 0 && yInt > 0 && zInt > 0) {
-            console.log("Collision detected with car #"+a);
+            console.log("Collision detected: Logs, log #"+a);
+            onLog = true;
+        } else {
+            //console.log("No collisions detected");
+            onLog = false;
+        }
+    }
+
+    // Cars 2
+    for (let a = 0; a < carGroup2.length; a++) {
+
+        // bounding boxes need constant object assigning in order for them to work!
+        froggerBBox = new THREE.Box3().setFromObject(frogger);
+
+        // establecer bounding box del coche
+        var carBBox = new THREE.Box3().setFromObject(carGroup2[a]);
+
+        // compute intersection size
+        xInt = froggerBBox.intersect(carBBox).getSize().x;
+        yInt = froggerBBox.intersect(carBBox).getSize().y;
+        zInt = froggerBBox.intersect(carBBox).getSize().z;
+
+        // check for collisions and not just touchpoints
+        if (xInt > 0 && yInt > 0 && zInt > 0) {
+            console.log("Collision detected: Cars 2, car #"+a);
         } else {
             //console.log("No collisions detected");
         }
