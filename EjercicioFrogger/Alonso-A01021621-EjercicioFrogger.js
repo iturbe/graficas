@@ -9,6 +9,7 @@ var container;
 var camera, scene, raycaster, renderer;
 var mouse = new THREE.Vector2(), INTERSECTED;
 var radius = 100, theta = 0;
+var message = "Coded by Alonso Iturbe";
 
 // Dimensiones de la ventana
 var xMax = 0;
@@ -30,12 +31,12 @@ var hop, bgmusic, coin, splash, collision;
 
 // carros
 var carGroup1;
-var car1, car2;
-var car1BB, car2BB;
-//var carBBox;
+var carGroup2;
+var logGroup;
 
 // Setup
 function createScene(canvas) {
+    
     renderer = new THREE.WebGLRenderer( { canvas: canvas, antialias: true } );
 
     // Set the viewport size
@@ -72,6 +73,8 @@ function createScene(canvas) {
     
     // cargar los sonidos de juego
     loadSounds();
+
+    ret = confirm("Ready to play?");
 
     // listener de eventos de teclado
     document.addEventListener( 'keydown', onKeyDown, false );
@@ -147,7 +150,57 @@ function gameSetup() {
         yInitialCars2 += 10;
         xInitialCars2 += 20;
     }
-    
+
+    // All other graphic elements (water, grass)
+
+    // grass 1
+    var geometry = new THREE.PlaneGeometry( 500, 50, 32);
+    var material = new THREE.MeshBasicMaterial( {color: "green", side: THREE.DoubleSide} );
+    var plane = new THREE.Mesh( geometry, material );
+    plane.position.set(0, -120, -201);
+    scene.add( plane );
+
+    // road 1
+    var geometry = new THREE.PlaneGeometry( 500, 50, 32);
+    var material = new THREE.MeshBasicMaterial( {color: "gray", side: THREE.DoubleSide} );
+    var plane = new THREE.Mesh( geometry, material );
+    plane.position.set(0, -70, -201);
+    scene.add( plane );
+
+    // grass 2
+    var geometry = new THREE.PlaneGeometry( 500, 20, 32);
+    var material = new THREE.MeshBasicMaterial( {color: "green", side: THREE.DoubleSide} );
+    var plane = new THREE.Mesh( geometry, material );
+    plane.position.set(0, -35, -201);
+    scene.add( plane );
+
+    // water
+    var geometry = new THREE.PlaneGeometry( 500, 30, 32);
+    var material = new THREE.MeshBasicMaterial( {color: "skyblue", side: THREE.DoubleSide} );
+    var plane = new THREE.Mesh( geometry, material );
+    plane.position.set(0, -10, -201);
+    scene.add( plane );
+
+    // grass 3
+    var geometry = new THREE.PlaneGeometry( 500, 20, 32);
+    var material = new THREE.MeshBasicMaterial( {color: "green", side: THREE.DoubleSide} );
+    var plane = new THREE.Mesh( geometry, material );
+    plane.position.set(0, 15, -201);
+    scene.add( plane );
+
+    // road 2
+    var geometry = new THREE.PlaneGeometry( 500, 50, 32);
+    var material = new THREE.MeshBasicMaterial( {color: "gray", side: THREE.DoubleSide} );
+    var plane = new THREE.Mesh( geometry, material );
+    plane.position.set(0, 50, -201);
+    scene.add( plane );
+
+    // finish line
+    var geometry = new THREE.PlaneGeometry( 500, 110, 32);
+    var material = new THREE.MeshBasicMaterial( {color: "green", side: THREE.DoubleSide} );
+    var plane = new THREE.Mesh( geometry, material );
+    plane.position.set(0, 130, -201);
+    scene.add( plane );
 }
 
 // updates the position of cars, logs and frogger (if he's on a log)
@@ -234,17 +287,20 @@ function checkCollisions() {
         area = 1;
         if (yPos > -30) {
             area = 2;
-            if (yPos > 20) {
+            if (yPos > 0) {
                 area = 3;
                 if (yPos > 70) {
                     area = 4;
+                    confirm("Congratulations, You Win!");
+                    location.reload();
                 }
             }
         }
     }
 
     // display
-    document.getElementById("displayScore").innerHTML = "("+xPos+","+yPos+","+zPos+") - Area "+area+onLog;
+    //document.getElementById("displayScore").innerHTML = "("+xPos+","+yPos+","+zPos+") - Area "+area+onLog;
+    document.getElementById("displayScore").innerHTML = message;
 
     // loop through all the active objects in the scene, checking for collisions...
 
@@ -266,6 +322,9 @@ function checkCollisions() {
         if (xInt > 0 && yInt > 0 && zInt > 0) {
             console.log("Collision detected: Cars 1, car #"+a);
             collision.play();
+            message = "You were run over by a car!";
+            //alert("You were run over by a car!");
+            //location.reload();
         } else {
             //console.log("No collisions detected");
         }
@@ -298,6 +357,14 @@ function checkCollisions() {
 
     // sólamente asignar la variable de onLog en caso de que estemos en un log
     onLog = onLogArr.reduce((acc, cur) => cur ? true : acc, false);
+    
+    // El susuario perdió
+    if (area == 2 && !onLog) {
+        splash.play();
+        message = "You fell into the river!";
+        // alert("You fell into the river!");
+        // location.reload();
+    }
 
     // Cars 2
     for (let a = 0; a < carGroup2.length; a++) {
@@ -317,6 +384,9 @@ function checkCollisions() {
         if (xInt > 0 && yInt > 0 && zInt > 0) {
             console.log("Collision detected: Cars 2, car #"+a);
             collision.play();
+            message = "You were run over by a car!";
+            // alert("You were run over by a car!");
+            // location.reload();
         } else {
             //console.log("No collisions detected");
         }
@@ -350,7 +420,8 @@ function loadSounds() {
         bgmusic.setBuffer( buffer );
         bgmusic.setLoop( true );
         bgmusic.setVolume( 0.3 );
-        bgmusic.play();
+        setTimeout(function(){bgmusic.play();}, 2500);
+        //bgmusic.play();
     });
 
     // INSERT COIN
@@ -362,7 +433,7 @@ function loadSounds() {
         coin.setBuffer( buffer );
         coin.setLoop( false );
         coin.setVolume( 0.6 );
-        //coin.play();
+        coin.play();
     });
 
     // WATER SPLASH
